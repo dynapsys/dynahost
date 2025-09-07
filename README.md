@@ -122,6 +122,20 @@ uv pip install "arpx[test]"
 uv pip install "arpx[mdns]"  # mDNS broadcasting support
 ```
 
+### Install via Makefile or script (ensures `sudo arpx` works)
+
+From the repository root, run:
+
+```bash
+make install                # installs for current user and links /usr/local/bin/arpx (fallback /usr/bin)
+```
+
+Alternatively, run the installer script directly with optional extras:
+
+```bash
+bash scripts/install_arpx.sh "compose,mdns"
+```
+
 ### Install CLI as a user tool (recommended for local dev)
 
 If you're developing locally from this repository, install the CLI into `~/.local/bin`:
@@ -208,6 +222,19 @@ Services will appear as `_http._tcp.local.` or `_https._tcp.local.` with instanc
 - API: `examples/api/simple_api.py`
 - Docker Compose: `examples/docker/docker-compose.yml` + `examples/docker/README.md`
 - Podman Compose: `examples/podman/docker-compose.yml` + `examples/podman/README.md`
+
+### Testing examples (smoke tests)
+
+Run all examples briefly with automatic cleanup (requires sudo and docker/podman where applicable):
+
+```bash
+make test-examples
+```
+
+Notes:
+
+- In non-interactive environments (no TTY), tests requiring a sudo password are skipped.
+- Ensure `ip` and `arping` are installed on the host.
 
 ## Certificate utilities
 

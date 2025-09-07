@@ -119,9 +119,9 @@ clean-caddy: ## Remove Caddy data that may require sudo
 	@echo "$(GREEN)✓ Caddy data removed$(NC)"
 
 docker-test: ## Run integration tests inside Docker
-	docker-compose -f tests/fixtures/docker-compose.test.yaml up -d
+	docker compose -f tests/fixtures/docker-compose.test.yaml up -d
 	$(UV) run pytest tests/integration/ -v -m docker
-	docker-compose -f tests/fixtures/docker-compose.test.yaml down -v
+	docker compose -f tests/fixtures/docker-compose.test.yaml down -v
 
 
 security: ## Run security scanners (bandit & safety)
@@ -147,7 +147,7 @@ check-dist: ## Check built distributions with twine
 
 
 build:
-	$(PY) -m build
+	$(PYTHON) -m build
 
 test-e2e: ## Run end-to-end tests (requires root and Docker; opt-in)
 	@if command -v uv >/dev/null 2>&1; then \
@@ -190,7 +190,8 @@ version-major:
 # Development tools
 dev-setup: install
 	@echo "🔧 Setting up the development environment..."
-	$(PIP) install flake8 black isort
+	$(PYTHON) -m pip install -U pip
+	$(PYTHON) -m pip install flake8 black isort
 	@echo "✅ Development environment ready"
 
 # Publishing with automatic versioning

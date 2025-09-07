@@ -15,6 +15,8 @@ podman-compose -f examples/podman/docker-compose.yml up -d
 
 ```bash
 sudo arpx compose -f examples/podman/docker-compose.yml --log-level INFO
+# If 'sudo arpx' is not found, either run 'make install' first or use:
+# sudo $(which arpx) compose -f examples/podman/docker-compose.yml --log-level INFO
 ```
 
 Optional HTTPS terminator on alias IPs using mkcert:
@@ -25,3 +27,9 @@ sudo arpx compose -f examples/podman/docker-compose.yml \
 ```
 
 Press Ctrl+C to stop the bridge and clean up alias IPs.
+
+Cleanup containers:
+
+```bash
+podman-compose -f examples/podman/docker-compose.yml down -v
+```

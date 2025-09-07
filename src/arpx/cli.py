@@ -361,6 +361,8 @@ def build_parser() -> argparse.ArgumentParser:
     up.add_argument("--cert-dir", help="Directory to place or read certificates")
     up.add_argument("--mdns", action="store_true", help="Publish services via mDNS (zeroconf)")
     up.add_argument("--mdns-prefix", default="arpx-", help="mDNS service name prefix (default: arpx-)")
+    # Accept --log-level after the subcommand as well
+    up.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     up.set_defaults(func=cmd_up)
 
     # cert
@@ -372,6 +374,8 @@ def build_parser() -> argparse.ArgumentParser:
     cert.add_argument("--domain", help="Domain for Let's Encrypt")
     cert.add_argument("--email", help="Email for Let's Encrypt")
     cert.add_argument("--staging", action="store_true", help="Use Let's Encrypt staging")
+    # Accept --log-level after the subcommand as well
+    cert.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     cert.set_defaults(func=cmd_cert)
 
     # dns
@@ -379,6 +383,8 @@ def build_parser() -> argparse.ArgumentParser:
     dns.add_argument("--domain", required=True, help="Desired local domain, e.g., myapp.lan")
     dns.add_argument("--ip", required=True, help="Target IP address")
     dns.add_argument("-o", "--output", help="Write dnsmasq snippet to file")
+    # Accept --log-level after the subcommand as well
+    dns.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     dns.set_defaults(func=cmd_dns)
 
     # compose bridge
@@ -397,6 +403,8 @@ def build_parser() -> argparse.ArgumentParser:
     comp.add_argument("--key-file", help="Path to custom private key (PEM)")
     comp.add_argument("--cert-dir", help="Directory to place or read certificates for compose HTTPS")
     comp.add_argument("--mdns", action="store_true", help="Publish services via mDNS (zeroconf)")
+    # Accept --log-level after the subcommand as well
+    comp.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     comp.set_defaults(func=cmd_compose)
 
     return p

@@ -15,6 +15,8 @@ docker compose -f examples/docker/docker-compose.yml up -d
 
 ```bash
 sudo arpx compose -f examples/docker/docker-compose.yml --log-level INFO
+# If 'sudo arpx' is not found, either run 'make install' first or use:
+# sudo $(which arpx) compose -f examples/docker/docker-compose.yml --log-level INFO
 ```
 
 Optional: add an HTTPS terminator on alias IPs using a self-signed cert:
@@ -32,3 +34,9 @@ web2: http://192.168.1.121:8081
 ```
 
 Press Ctrl+C to stop and clean up alias IPs.
+
+Cleanup containers:
+
+```bash
+docker compose -f examples/docker/docker-compose.yml down -v
+```
