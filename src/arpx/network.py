@@ -196,3 +196,5 @@ class NetworkVisibleManager:
         logger.info("Cleaning up: removing %d virtual IP(s)", len(self.virtual_ips))
         for ip, _label in self.virtual_ips:
             self.remove_virtual_ip(ip)
+        # Prevent double-removal attempts on subsequent cleanup calls
+        self.virtual_ips.clear()

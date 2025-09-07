@@ -61,7 +61,11 @@ class TcpForwarder:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self._server_sock = s
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind((self.listen_host, self.listen_port))
+            try:
+                s.bind((self.listen_host, self.listen_port))
+            except OSError as e:
+                logger.warning("Forwarder bind failed %s:%d -> %s:%d: %s", self.listen_host, self.listen_port, self.target_host, self.target_port, e)
+                return
             s.listen(128)
             s.settimeout(0.5)
             while not self._stop.is_set():
