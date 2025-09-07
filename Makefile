@@ -23,40 +23,8 @@ help: ## Show this help message
 
 install: ## Install arpx CLI for current user and link system-wide (ensures 'sudo arpx' works)
 	@echo "$(YELLOW)Installing arpx CLI (user) with extras: [$(INSTALL_EXTRAS)]...$(NC)"
-	@set -e; \
-	if ! command -v arpx >/dev/null 2>&1; then \
-		if command -v $(UV) >/dev/null 2>&1; then \
-			$(UV) tool install --force ".[${INSTALL_EXTRAS}]" || $(UV) tool install --force .; \
-		elif command -v pipx >/dev/null 2>&1; then \
-			pipx install --force ".[${INSTALL_EXTRAS}]" || pipx install --force .; \
-		else \
-			$(PYTHON) -m pip install --user ".[${INSTALL_EXTRAS}]" || $(PYTHON) -m pip install --user .; \
-		fi; \
-	else \
-		printf "arpx already present at %s\n" "$$(command -v arpx)"; \
-	fi; \
-	ARPX_BIN=$$(command -v arpx || true); \
-	if [ -z "$$ARPX_BIN" ] && [ -x "$$HOME/.local/bin/arpx" ]; then \
-		ARPX_BIN="$$HOME/.local/bin/arpx"; \
-	fi; \
-	if [ -n "$$ARPX_BIN" ]; then \
-		# Link in /usr/local/bin (commonly in PATH)
-		if ! sudo sh -lc 'test -x "/usr/local/bin/arpx"'; then \
-			echo "Linking /usr/local/bin/arpx -> $$ARPX_BIN (sudo may prompt)"; \
-			sudo ln -sf "$$ARPX_BIN" /usr/local/bin/arpx; \
-		else \
-			printf "/usr/local/bin/arpx exists (%s)\n" "$$(/usr/bin/readlink -f /usr/local/bin/arpx || /bin/ls -l /usr/local/bin/arpx)"; \
-		fi; \
-		# If sudo PATH doesn't include /usr/local/bin, ensure fallback in /usr/bin
-		if ! sudo sh -lc 'command -v arpx >/dev/null 2>&1'; then \
-			echo "'/usr/local/bin' not in sudo PATH; adding fallback /usr/bin/arpx"; \
-			sudo ln -sf "$$ARPX_BIN" /usr/bin/arpx; \
-		fi; \
-		printf "\n$(GREEN)✓ arpx ready. Try: sudo arpx --help$(NC)\n"; \
-	else \
-		echo "$(RED)!! arpx not found after install. Consider: make install-system$(NC)"; \
-		exit 1; \
-	fi
+	@chmod +x scripts/install_arpx.sh || true
+	@bash scripts/install_arpx.sh "$(INSTALL_EXTRAS)"
 
 install-user: ## Install arpx CLI to ~/.local/bin (uv tool -> pipx -> pip --user)
 	@set -e; \
