@@ -1,12 +1,3 @@
-Optional extras:
-
-```bash
-# Compose bridging (PyYAML)
-uv pip install "dynahost[compose]"
-
-# Test utilities (pytest)
-uv pip install "dynahost[test]"
-```
 # DynaHost
 
 ![PyPI](https://img.shields.io/pypi/v/dynahost)
@@ -57,6 +48,16 @@ Or with pip:
 
 ```bash
 pip install dynahost
+```
+
+Optional extras:
+
+```bash
+# Compose bridging (PyYAML)
+uv pip install "dynahost[compose]"
+
+# Test utilities (pytest)
+uv pip install "dynahost[test]"
 ```
 
 ## Quick start
@@ -111,6 +112,13 @@ Requirements:
 - Your services must publish ports to the host (e.g. `"8080:80"` or `{published: 8080, target: 80}`).
 - DynaHost forwards `alias_ip:host_port -> 127.0.0.1:host_port`, so services remain bound to localhost.
 - For HTTPS services inside containers, TLS still terminates in the container and works end-to-end.
+
+## Examples
+
+- CLI: `examples/cli/run.sh`
+- API: `examples/api/simple_api.py`
+- Docker Compose: `examples/docker/docker-compose.yml` + `examples/docker/README.md`
+- Podman Compose: `examples/podman/docker-compose.yml` + `examples/podman/README.md`
 
 ## Certificate utilities
 

@@ -17,7 +17,8 @@
 - `src/dynahost/compose.py` – Parser `docker-compose.yml` (opcjonalna zależność `PyYAML`)
   - Wydobywa opublikowane porty TCP dla usług.
 - `src/dynahost/proxy.py` – Prosty TCP forwarder (alias_ip:host_port → 127.0.0.1:host_port)
-- `src/dynahost/bridge.py` – "Bridge" Compose → LAN IP aliasy + forwardery
+- `src/dynahost/terminator.py` – TLS terminator: przyjmuje HTTPS na aliasie i przekazuje HTTP do usługi
+- `src/dynahost/bridge.py` – "Bridge" Compose → LAN IP aliasy + forwardery + (opcjonalnie) terminator TLS
   - Dla każdej usługi z publikowanymi portami TCP:
     - Tworzy alias IP (widoczny via ARP) na interfejsie.
     - Dodaje reguły iptables (jeśli dostępne).
@@ -47,6 +48,7 @@
   1. Parsowanie `docker-compose.yml` → lista usług i portów TCP (published/host).
   2. Przydział aliasów IP (auto lub z `--base-ip`).
   3. Dla każdego host_port: iptables ACCEPT oraz forwarder alias_ip:host_port → 127.0.0.1:host_port.
+  4. (Opcja) Terminator HTTPS na aliasie (domyślnie port 443) → HTTP do pierwszego opublikowanego portu.
   4. Sprzątanie: zamknięcie forwarderów, usunięcie aliasów IP.
 
 ## Bezpieczeństwo i uwagi
