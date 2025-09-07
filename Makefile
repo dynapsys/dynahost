@@ -1,5 +1,5 @@
 # DynaHost Makefile
-.PHONY: help install dev test test-unit test-integration test-examples test-watch lint format docs docs-serve clean docker-test security release pre-commit coverage-report benchmark check-deps update-deps free-port-80 example-simple example-api example-fullstack example-clean dynadock-up dynadock-down dynadock-logs dynadock-health build-dist check-dist publish publish-testpypi
+.PHONY: help install dev test test-unit test-integration test-watch lint format docs docs-serve clean docker-test security release pre-commit coverage-report benchmark check-deps update-deps free-port-80 example-cli example-api example-docker example-podman example-clean build-dist check-dist publish publish-testpypi
 
 PYTHON := python3
 UV := uv
@@ -41,7 +41,6 @@ test: ## Run all tests with coverage
 		python3 -c 'import sys; import importlib.util; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' || pip3 install -q pytest pytest-cov requests pytest-timeout; \
 		python3 -m pytest tests/ -v --cov=src/dynahost --cov-report=term-missing --cov-report=html; \
 	fi
-	@$(MAKE) test-examples
 	@echo "$(GREEN)✓ All tests complete$(NC)"
 
 test-unit: ## Run unit tests only
@@ -50,11 +49,7 @@ test-unit: ## Run unit tests only
 test-integration: ## Run integration tests only
 	$(UV) run pytest tests/integration/ -v -m integration
 
-test-examples: ## Run tests for all example applications
-	@echo "$(YELLOW)Testing example applications...$(NC)"
-	@chmod +x scripts/test_runner.sh
-	@./scripts/test_runner.sh all
-	@echo "$(GREEN)✓ Example tests complete$(NC)"
+ 
 
 test-watch: ## Run tests in watch mode
 	$(UV) run pytest-watch tests/ -v
@@ -125,12 +120,12 @@ check-dist: ## Check built distributions with twine
 build:
 	$(PY) -m build
 
-test-e2e:
-	@echo "Using PY=$(PY)"
-	@echo "LIBVIRT_DEFAULT_URI=$(LIBVIRT_DEFAULT_URI)"
-	@echo "dynadock_TEST_IMAGE=$(dynadock_TEST_IMAGE)"
-	@echo "dynadock_TEST_OS_VARIANT=$(dynadock_TEST_OS_VARIANT)"
-	$(PY) -m pytest -v tests/test_e2e.py
+test-e2e: ## Run end-to-end tests (requires root and Docker; opt-in)
+	@if command -v uv >/dev/null 2>&1; then \
+		uv run pytest -v -m e2e; \
+	else \
+		python3 -m pytest -v -m e2e; \
+	fi
 
 # Versioning
 version-show:
@@ -211,41 +206,28 @@ free-port-80: ## Free up port 80 for Caddy
 	@docker ps --filter "publish=80" --format "{{.ID}}" | xargs -r docker stop || true
 	@echo "$(GREEN)✓ Port 80 is now free$(NC)"
 
-example-simple: ## Run the simple-web example
-	@echo "$(YELLOW)Starting simple-web example...$(NC)"
-	cd examples/simple-web && dynadock up --enable-tls
+example-cli: ## Run CLI example (requires sudo)
+	@echo "$(YELLOW)Running CLI example...$(NC)"
+	@sudo bash examples/cli/run.sh
 
-example-api: ## Run the REST API example
-	@echo "$(YELLOW)Starting REST API example...$(NC)"
-	cd examples/rest-api && dynadock up --enable-tls
+example-api: ## Run API example (requires sudo)
+	@echo "$(YELLOW)Running API example...$(NC)"
+	@sudo python3 examples/api/simple_api.py
 
-example-fullstack: ## Run the fullstack example
-	@echo "$(YELLOW)Starting fullstack example...$(NC)"
-	cd examples/fullstack && dynadock up --enable-tls
+example-docker: ## Start Docker example stack and bridge to LAN (requires sudo)
+	@echo "$(YELLOW)Starting Docker example...$(NC)"
+	@docker compose -f examples/docker/docker-compose.yml up -d
+	@sudo dynahost compose -f examples/docker/docker-compose.yml
 
-example-clean: ## Clean all example Docker resources
+example-podman: ## Start Podman example stack and bridge to LAN (requires sudo)
+	@echo "$(YELLOW)Starting Podman example...$(NC)"
+	@podman-compose -f examples/podman/docker-compose.yml up -d
+	@sudo dynahost compose -f examples/podman/docker-compose.yml
+
+example-clean: ## Clean all example Docker/Podman resources
 	@echo "$(YELLOW)Cleaning example resources...$(NC)"
-	@for dir in examples/*/; do \
-		if [ -f "$$dir/docker-compose.yaml" ]; then \
-			cd "$$dir" && dynadock down -v 2>/dev/null || true; \
-		fi; \
-	done
+	-@docker compose -f examples/docker/docker-compose.yml down -v 2>/dev/null || true
+	-@podman-compose -f examples/podman/docker-compose.yml down -v 2>/dev/null || true
 	@echo "$(GREEN)✓ Examples cleaned$(NC)"
-
-dynadock-up: ## Start DynaDock with current docker-compose.yaml
-	@echo "$(YELLOW)Starting DynaDock services...$(NC)"
-	dynadock up --enable-tls
-
-dynadock-down: ## Stop DynaDock services
-	@echo "$(YELLOW)Stopping DynaDock services...$(NC)"
-	dynadock down
-
-dynadock-logs: ## View DynaDock service logs
-	dynadock logs -f
-
-dynadock-health: ## Run health checks on DynaDock services
-	@echo "$(YELLOW)Running health checks...$(NC)"
-	$(PYTHON) health_check.py
-	@echo "$(GREEN)✓ Health check complete$(NC)"
 
 .DEFAULT_GOAL := help

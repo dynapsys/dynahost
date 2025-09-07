@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility"
 readme = "README.md"
 authors = [
-  { name = "Dynapsys", email = "contact@dynapsys.example" }
+  { name = "Tom Sapletta", email = "info@softreck.dev" }
 ]
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -29,6 +29,7 @@ dependencies = [
 mdns = ["zeroconf>=0.37.0"]
 le = ["certbot>=2.9.0"]
 compose = ["PyYAML>=6.0"]
+test = ["pytest>=7.0", "pytest-timeout>=2.1"]
 
 [project.urls]
 Homepage = "https://github.com/dynapsys/dynahost"

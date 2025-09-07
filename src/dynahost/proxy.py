@@ -1,7 +1,7 @@
 import socket
 import threading
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 logger = logging.getLogger("dynahost.proxy")
 
@@ -93,7 +93,7 @@ class TcpForwarder:
 
 class TcpForwarderManager:
     def __init__(self):
-        self.forwarders: list[TcpForwarder] = []
+        self.forwarders: List[TcpForwarder] = []
 
     def add(self, listen_host: str, listen_port: int, target_host: str, target_port: int) -> TcpForwarder:
         fwd = TcpForwarder((listen_host, listen_port), (target_host, target_port))

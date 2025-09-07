@@ -232,6 +232,45 @@ def cmd_compose(args: argparse.Namespace) -> int:
 
     cb = ComposeBridge(interface)
 
+    # Optional HTTPS terminator context
+    ssl_ctx = None
+    cert_dir = Path(args.cert_dir or (Path.cwd() / ".dynahost" / "certs" / "compose"))
+    if args.https and args.https != "none":
+        if args.https == "self-signed":
+            names = []
+            if args.domains:
+                names.extend([d.strip() for d in args.domains.split(",") if d.strip()])
+            common_name = names[0] if names else "dynahost.local"
+            cert_file, key_file = cert_utils.generate_self_signed_cert(cert_dir, common_name, names)
+            ssl_ctx = cert_utils.build_ssl_context(cert_file, key_file)
+        elif args.https == "mkcert":
+            names = []
+            if args.domains:
+                names.extend([d.strip() for d in args.domains.split(",") if d.strip()])
+            try:
+                cert_file, key_file = cert_utils.generate_mkcert_cert(cert_dir, names or ["localhost"])
+            except RuntimeError as e:
+                print(f"❌ {e}")
+                return 1
+            ssl_ctx = cert_utils.build_ssl_context(cert_file, key_file)
+        elif args.https == "letsencrypt":
+            if not args.domain or not args.email:
+                print("❌ For Let's Encrypt please provide --domain and --email")
+                return 1
+            try:
+                cert_file, key_file = cert_utils.get_letsencrypt_cert(args.domain, args.email, args.staging)
+            except Exception as e:
+                print(f"❌ Let's Encrypt error: {e}")
+                return 1
+            ssl_ctx = cert_utils.build_ssl_context(cert_file, key_file)
+        elif args.https == "custom":
+            if not args.cert_file or not args.key_file:
+                print("❌ For custom certs provide --cert-file and --key-file")
+                return 1
+            cert_file = Path(args.cert_file)
+            key_file = Path(args.key_file)
+            ssl_ctx = cert_utils.build_ssl_context(cert_file, key_file)
+
     # signal handling
     def signal_handler(sig, frame):
         print("\n\n⚠️ Stopping compose bridge...")
@@ -241,7 +280,9 @@ def cmd_compose(args: argparse.Namespace) -> int:
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    created = cb.up(Path(args.file), ip_start=args.ip_start, base_ip=args.base_ip)
+    created = cb.up(
+        Path(args.file), ip_start=args.ip_start, base_ip=args.base_ip, ssl_context=ssl_ctx, https_port=args.https_port
+    )
     if not created:
         print("⚠️ Nothing bridged (no services with published TCP ports?)")
         return 1
@@ -309,6 +350,15 @@ def build_parser() -> argparse.ArgumentParser:
     comp.add_argument("-i", "--interface", help="Network interface (auto-detected if omitted)")
     comp.add_argument("--ip-start", type=int, default=100, help="Start searching from this last octet value")
     comp.add_argument("-b", "--base-ip", help="Base IP to start from (otherwise auto-find free IPs)")
+    comp.add_argument("--https", choices=["none", "self-signed", "mkcert", "letsencrypt", "custom"], default="none", help="Enable HTTPS terminator for bridged services")
+    comp.add_argument("--https-port", type=int, default=443, help="Port for HTTPS terminator on alias IPs (default: 443)")
+    comp.add_argument("--domains", help="Comma-separated domain list for cert SANs (self-signed/mkcert)")
+    comp.add_argument("--domain", help="Single domain for Let's Encrypt")
+    comp.add_argument("--email", help="Email for Let's Encrypt")
+    comp.add_argument("--staging", action="store_true", help="Use Let's Encrypt staging environment")
+    comp.add_argument("--cert-file", help="Path to custom certificate (PEM)")
+    comp.add_argument("--key-file", help="Path to custom private key (PEM)")
+    comp.add_argument("--cert-dir", help="Directory to place or read certificates for compose HTTPS")
     comp.set_defaults(func=cmd_compose)
 
     return p
