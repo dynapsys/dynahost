@@ -192,7 +192,32 @@ run_podman_example() {
   set -e
 }
 
+# HTTPS: arpx up --https self-signed (requires sudo)
+run_https_example() {
+  log "HTTPS example: arpx up --https self-signed (smoke test)"
+  local arpx_bin="$1"
+  if ! require_root_tools; then return 0; fi
+  if ! have_cmd sudo; then skip "sudo not available"; return 0; fi
+  if ! sudo -n true 2>/dev/null && ! has_tty; then
+    skip "sudo requires TTY for password; skipping in non-interactive environment"
+    return 0
+  fi
+
+  if run_with_timeout 15 sudo "$arpx_bin" --log-level INFO up -n 1 --https self-signed --domains test.lan; then
+    ok "HTTPS example ran (timed run)"
+  else
+    err "HTTPS example failed"
+  fi
+}
+
 main() {
+  # Check for timeout command availability first
+  if ! have_cmd timeout && ! have_cmd gtimeout; then
+    err "timeout command not found; skipping tests"
+    exit 1
+  fi
+  log "Running smoke tests for examples..."
+
   local arpx_bin
   arpx_bin="$(find_arpx)"
   if [[ -z "$arpx_bin" ]]; then
@@ -203,6 +228,7 @@ main() {
 
   run_cli_example "$arpx_bin"
   run_api_example
+  run_https_example "$arpx_bin"
   run_docker_example "$arpx_bin"
   run_podman_example "$arpx_bin"
 
