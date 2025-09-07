@@ -53,9 +53,16 @@ run_with_timeout() {
 
 find_arpx() {
   local arpx_bin
-  arpx_bin="$(command -v arpx || true)"
-  if [[ -z "$arpx_bin" && -x "$HOME/.local/bin/arpx" ]]; then
-    arpx_bin="$HOME/.local/bin/arpx"
+  # Prefer system links we create
+  if [[ -x "/usr/local/bin/arpx" ]]; then
+    arpx_bin="/usr/local/bin/arpx"
+  elif [[ -x "/usr/bin/arpx" ]]; then
+    arpx_bin="/usr/bin/arpx"
+  else
+    arpx_bin="$(command -v arpx || true)"
+    if [[ -z "$arpx_bin" && -x "$HOME/.local/bin/arpx" ]]; then
+      arpx_bin="$HOME/.local/bin/arpx"
+    fi
   fi
   printf "%s" "$arpx_bin"
 }
@@ -103,7 +110,7 @@ run_api_example() {
     skip "sudo requires TTY for password; skipping in non-interactive environment"
     return 0
   fi
-  if run_with_timeout 20 sudo python3 examples/api/simple_api.py; then
+  if run_with_timeout 20 sudo -E PYTHONPATH="$(pwd)/src" python3 examples/api/simple_api.py; then
     ok "API example ran (timed run)"
   else
     err "API example failed"

@@ -19,17 +19,13 @@ if [[ -n "$EXTRAS" ]]; then
   ARPX_SPEC=".[${EXTRAS}]"
 fi
 
-say "Installing arpx for current user with extras: [${EXTRAS}]"
-if ! command -v arpx >/dev/null 2>&1; then
-  if command -v uv >/dev/null 2>&1; then
-    if uv tool install --force "${ARPX_SPEC}"; then ok "uv tool install success"; else say "uv failed, trying plain: uv tool install ."; uv tool install --force .; fi
-  elif command -v pipx >/dev/null 2>&1; then
-    if pipx install --force "${ARPX_SPEC}"; then ok "pipx install success"; else say "pipx failed, trying plain: pipx install ."; pipx install --force .; fi
-  else
-    python3 -m pip install --user "${ARPX_SPEC}" || python3 -m pip install --user .
-  fi
+say "Installing (or updating) arpx for current user with extras: [${EXTRAS}]"
+if command -v uv >/dev/null 2>&1; then
+  if uv tool install --force "${ARPX_SPEC}"; then ok "uv tool install success"; else say "uv failed, trying plain: uv tool install ."; uv tool install --force .; fi
+elif command -v pipx >/dev/null 2>&1; then
+  if pipx install --force "${ARPX_SPEC}"; then ok "pipx install success"; else say "pipx failed, trying plain: pipx install ."; pipx install --force .; fi
 else
-  ok "arpx already present at $(command -v arpx)"
+  python3 -m pip install --user --upgrade "${ARPX_SPEC}" || python3 -m pip install --user --upgrade .
 fi
 
 ARPX_BIN="$(command -v arpx || true)"
@@ -43,7 +39,7 @@ if [[ -z "$ARPX_BIN" ]]; then
 fi
 
 say "Linking arpx so sudo can find it"
-# Prefer /usr/local/bin, fallback to /usr/bin if necessary
+# Create/update links in common root PATH dirs: /usr/local/bin, /usr/bin, /usr/local/sbin
 if ! sudo sh -lc 'test -x /usr/local/bin/arpx'; then
   say "Linking /usr/local/bin/arpx -> $ARPX_BIN"
   sudo ln -sf "$ARPX_BIN" /usr/local/bin/arpx
@@ -51,6 +47,11 @@ else
   say "/usr/local/bin/arpx already exists"
 fi
 
+# Some systems use /usr/local/sbin for admin tools, include it as well
+say "Ensuring /usr/local/sbin/arpx points to $ARPX_BIN"
+sudo ln -sf "$ARPX_BIN" /usr/local/sbin/arpx
+
+# Fallback in /usr/bin if sudo PATH lacks /usr/local/bin
 if ! sudo sh -lc 'command -v arpx >/dev/null 2>&1'; then
   say "'/usr/local/bin' not in sudo PATH; adding fallback /usr/bin/arpx"
   sudo ln -sf "$ARPX_BIN" /usr/bin/arpx

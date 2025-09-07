@@ -18,7 +18,16 @@ bash scripts/install_arpx.sh "compose,mdns"
 
 From the repo root:
 
+Option A (recommended for quick run without installing the package):
+
 ```bash
+sudo -E PYTHONPATH="$(pwd)/src" python3 examples/api/simple_api.py
+```
+
+Option B (install the package first and then run):
+
+```bash
+uv pip install -e .
 sudo python3 examples/api/simple_api.py
 ```
 
