@@ -13,6 +13,7 @@ from . import certs as cert_utils
 from .dns import suggest_dns
 from .bridge import ComposeBridge
 from .mdns import MDNSPublisher
+from . import __version__
 
 
 def _setup_logging(log_level: str) -> None:
@@ -331,6 +332,7 @@ def cmd_compose(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="arpx", description="ARPx - multi-IP LAN HTTP/HTTPS servers with ARP visibility")
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
