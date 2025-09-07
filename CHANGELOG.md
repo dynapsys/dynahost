@@ -14,7 +14,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Examples: CLI, API, Docker, Podman under `examples/`
 - Tests: unit (compose parser, proxy forwarder), e2e (compose bridge)
 - README: badges, use-cases for DevOps and juniors
-- Rename package to `arpx` (4-letter), keep transitional `dynahost` console alias for now
+- Rename package to `arpx` (4-letter), keep transitional `arpx` console alias for now
 
 ## [0.0.2] - 2025-09-07
 

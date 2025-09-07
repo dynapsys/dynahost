@@ -217,12 +217,12 @@ example-api: ## Run API example (requires sudo)
 example-docker: ## Start Docker example stack and bridge to LAN (requires sudo)
 	@echo "$(YELLOW)Starting Docker example...$(NC)"
 	@docker compose -f examples/docker/docker-compose.yml up -d
-	@sudo arpx compose -f examples/docker/docker-compose.yml
+	@sudo $$(which arpx) compose -f examples/docker/docker-compose.yml
 
 example-podman: ## Start Podman example stack and bridge to LAN (requires sudo)
 	@echo "$(YELLOW)Starting Podman example...$(NC)"
 	@podman-compose -f examples/podman/docker-compose.yml up -d
-	@sudo arpx compose -f examples/podman/docker-compose.yml
+	@sudo $$(which arpx) compose -f examples/podman/docker-compose.yml
 
 example-clean: ## Clean all example Docker/Podman resources
 	@echo "$(YELLOW)Cleaning example resources...$(NC)"

@@ -89,7 +89,7 @@ def cmd_up(args: argparse.Namespace) -> int:
     # TLS setup
     scheme = "http"
     ssl_ctx = None
-    cert_dir = Path(args.cert_dir or (Path.cwd() / ".dynahost" / "certs"))
+    cert_dir = Path(args.cert_dir or (Path.cwd() / ".arpx" / "certs"))
     if args.https and args.https != "none":
         scheme = "https"
         if args.https == "self-signed":
@@ -186,7 +186,7 @@ def cmd_cert(args: argparse.Namespace) -> int:
     out.mkdir(parents=True, exist_ok=True)
     if args.mode == "self-signed":
         names = [n.strip() for n in (args.names or "").split(",") if n.strip()]
-        cn = args.common_name or (names[0] if names else "dynahost.local")
+        cn = args.common_name or (names[0] if names else "arpx.local")
         cert, key = cert_utils.generate_self_signed_cert(out, cn, names or ["localhost"]) 
         print(f"✅ Generated self-signed cert:\n  cert: {cert}\n  key:  {key}")
     elif args.mode == "mkcert":
@@ -234,13 +234,13 @@ def cmd_compose(args: argparse.Namespace) -> int:
 
     # Optional HTTPS terminator context
     ssl_ctx = None
-    cert_dir = Path(args.cert_dir or (Path.cwd() / ".dynahost" / "certs" / "compose"))
+    cert_dir = Path(args.cert_dir or (Path.cwd() / ".arpx" / "certs" / "compose"))
     if args.https and args.https != "none":
         if args.https == "self-signed":
             names = []
             if args.domains:
                 names.extend([d.strip() for d in args.domains.split(",") if d.strip()])
-            common_name = names[0] if names else "dynahost.local"
+            common_name = names[0] if names else "arpx.local"
             cert_file, key_file = cert_utils.generate_self_signed_cert(cert_dir, common_name, names)
             ssl_ctx = cert_utils.build_ssl_context(cert_file, key_file)
         elif args.https == "mkcert":
@@ -304,7 +304,7 @@ def cmd_compose(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="dynahost", description="DynaHost - multi-IP LAN HTTP/HTTPS servers with ARP visibility")
+    p = argparse.ArgumentParser(prog="arpx", description="arpx - multi-IP LAN HTTP/HTTPS servers with ARP visibility")
     p.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -329,7 +329,7 @@ def build_parser() -> argparse.ArgumentParser:
     # cert
     cert = sub.add_parser("cert", help="Certificate utilities")
     cert.add_argument("mode", choices=["self-signed", "mkcert", "letsencrypt"], help="Certificate mode")
-    cert.add_argument("-o", "--output", default=str(Path.cwd() / ".dynahost" / "certs"), help="Output directory")
+    cert.add_argument("-o", "--output", default=str(Path.cwd() / ".arpx" / "certs"), help="Output directory")
     cert.add_argument("--common-name", help="Common Name for self-signed")
     cert.add_argument("--names", help="Comma-separated SANs: domain(s) and/or IP(s)")
     cert.add_argument("--domain", help="Domain for Let's Encrypt")

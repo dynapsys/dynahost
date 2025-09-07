@@ -19,8 +19,8 @@ def test_compose_bridge_end_to_end(tmp_path: Path):
         pytest.skip("docker required for e2e test")
     if shutil.which("arping") is None:
         pytest.skip("iputils-arping required for e2e test")
-    if os.environ.get("DYNAHOST_E2E", "0") != "1":
-        pytest.skip("Set DYNAHOST_E2E=1 to run this heavy e2e test")
+    if os.environ.get("arpx_E2E", "0") != "1":
+        pytest.skip("Set arpx_E2E=1 to run this heavy e2e test")
 
     compose_file = Path.cwd() / "examples" / "docker" / "docker-compose.yml"
     assert compose_file.exists()

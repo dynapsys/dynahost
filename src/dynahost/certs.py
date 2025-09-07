@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
 
-logger = logging.getLogger("dynahost.certs")
+logger = logging.getLogger("arpx.certs")
 
 
 def ensure_dir(path: Path) -> None:

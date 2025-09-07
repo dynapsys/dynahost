@@ -28,6 +28,7 @@
   - `arpx cert` – narzędzia certów.
   - `arpx dns` – podpowiedzi domen.
   - `arpx compose` – bridge usług (Docker/Podman Compose) do LAN.
+  - (Opcja) mDNS (`--mdns`) – publikacja usług jako `_http._tcp.local.`/`_https._tcp.local.`
 
 ## Przepływy
 
@@ -61,7 +62,7 @@
 
 ## Rozszerzenia (backlog)
 
-- Integracja mDNS (Zeroconf) do automatycznej publikacji nazw.
+- [ZROBIONE] Integracja mDNS (Zeroconf) do automatycznej publikacji nazw.
 - Monitorowanie konfliktów IP / wykrywanie DHCP.
 - Integracja z `nftables`.
 - Tryb reverse‑proxy (HTTP) z nagłówkami X‑Forwarded‑For.

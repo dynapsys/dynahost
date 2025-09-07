@@ -2,8 +2,8 @@
 
 ![PyPI](https://img.shields.io/pypi/v/arpx)
 ![Python Versions](https://img.shields.io/pypi/pyversions/arpx)
-![License](https://img.shields.io/github/license/dynapsys/dynahost)
-![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/dynahost/ci.yml?branch=main)
+![License](https://img.shields.io/github/license/dynapsys/arpx)
+![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/arpx/ci.yml?branch=main)
 
 Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility and optional Docker/Podman Compose bridging.
 
@@ -99,7 +99,7 @@ ARPx allows you to:
 
 ## ARPx Installation
 
-Using uv:
+Using uv (from PyPI):
 
 ```bash
 uv pip install arpx
@@ -120,6 +120,21 @@ uv pip install "arpx[compose]"
 # Test utilities (pytest)
 uv pip install "arpx[test]"
 uv pip install "arpx[mdns]"  # mDNS broadcasting support
+```
+
+### Install CLI as a user tool (recommended for local dev)
+
+If you're developing locally from this repository, install the CLI into `~/.local/bin`:
+
+```bash
+uv tool install --force .
+```
+
+This creates an `arpx` launcher in `~/.local/bin`. If you use `sudo` to run network operations, run with an absolute path so root can find it:
+
+```bash
+sudo $(which arpx) up -n 2
+sudo $(which arpx) compose -f docker-compose.yml
 ```
 
 ## Quick start

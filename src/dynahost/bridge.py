@@ -7,7 +7,7 @@ from .proxy import TcpForwarderManager
 from .compose import parse_compose_services, ComposeServices
 from .terminator import TlsTerminatorManager
 
-logger = logging.getLogger("dynahost.bridge")
+logger = logging.getLogger("arpx.bridge")
 
 
 class ComposeBridge:

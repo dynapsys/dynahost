@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Tuple
 
-logger = logging.getLogger("dynahost.terminator")
+logger = logging.getLogger("arpx.terminator")
 
 
 class TlsTerminator:

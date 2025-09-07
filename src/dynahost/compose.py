@@ -61,7 +61,7 @@ def _parse_port_entry(svc: str, entry) -> Optional[ServicePort]:
 def parse_compose_services(path: Path) -> ComposeServices:
     if yaml is None:
         raise RuntimeError(
-            "PyYAML is not installed. Install optional extras: dynahost[compose]"
+            "PyYAML is not installed. Install optional extras: arpx[compose]"
         )
     data = yaml.safe_load(Path(path).read_text())
     services = data.get("services") or {}

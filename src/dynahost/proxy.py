@@ -3,7 +3,7 @@ import threading
 import logging
 from typing import Tuple, Optional, List
 
-logger = logging.getLogger("dynahost.proxy")
+logger = logging.getLogger("arpx.proxy")
 
 
 class TcpForwarder:

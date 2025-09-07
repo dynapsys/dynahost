@@ -12,7 +12,7 @@ import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import List, Optional, Tuple
 
-logger = logging.getLogger("dynahost.server")
+logger = logging.getLogger("arpx.server")
 
 
 class VisibleHTTPHandler(BaseHTTPRequestHandler):

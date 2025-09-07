@@ -7,7 +7,7 @@ import logging
 from typing import List, Optional, Tuple
 
 
-logger = logging.getLogger("dynahost.network")
+logger = logging.getLogger("arpx.network")
 
 
 class NetworkVisibleManager:
