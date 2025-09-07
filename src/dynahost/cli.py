@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import signal
 import sys
@@ -10,6 +11,15 @@ from .network import NetworkVisibleManager
 from .server import LANWebServerManager
 from . import certs as cert_utils
 from .dns import suggest_dns
+from .bridge import ComposeBridge
+
+
+def _setup_logging(log_level: str) -> None:
+    level = getattr(logging, log_level.upper(), logging.INFO)
+    logging.basicConfig(
+        level=level,
+        format="[%(levelname)s] %(name)s: %(message)s",
+    )
 
 
 def print_summary(created_ips: List[str], base_port: int, scheme: str = "http") -> None:
@@ -44,6 +54,7 @@ def print_summary(created_ips: List[str], base_port: int, scheme: str = "http") 
 
 
 def cmd_up(args: argparse.Namespace) -> int:
+    _setup_logging(args.log_level)
     # Root required
     NetworkVisibleManager.check_root()
 
@@ -170,6 +181,7 @@ def cmd_up(args: argparse.Namespace) -> int:
 
 
 def cmd_cert(args: argparse.Namespace) -> int:
+    _setup_logging(args.log_level)
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
     if args.mode == "self-signed":
@@ -194,6 +206,7 @@ def cmd_cert(args: argparse.Namespace) -> int:
 
 
 def cmd_dns(args: argparse.Namespace) -> int:
+    _setup_logging(args.log_level)
     advice = suggest_dns(args.domain, args.ip)
     print("\nSuggestions for local domain configuration:\n")
     print("Hosts entry:")
@@ -209,8 +222,49 @@ def cmd_dns(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_compose(args: argparse.Namespace) -> int:
+    _setup_logging(args.log_level)
+    # root required; ComposeBridge will also check
+    NetworkVisibleManager.check_root()
+
+    interface = args.interface or NetworkVisibleManager.auto_detect_interface()
+    print(f"🔍 Interface: {interface}")
+
+    cb = ComposeBridge(interface)
+
+    # signal handling
+    def signal_handler(sig, frame):
+        print("\n\n⚠️ Stopping compose bridge...")
+        cb.cleanup()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    created = cb.up(Path(args.file), ip_start=args.ip_start, base_ip=args.base_ip)
+    if not created:
+        print("⚠️ Nothing bridged (no services with published TCP ports?)")
+        return 1
+
+    print("\n" + "=" * 60)
+    print("✅ COMPOSE SERVICES BRIDGED TO LAN")
+    print("=" * 60)
+    for alias_ip, svc, ports in created:
+        for port in ports:
+            print(f"  - {svc}: http://{alias_ip}:{port}  (or https if your service serves TLS)")
+    print("\nPress Ctrl+C to stop and remove alias IPs.")
+
+    try:
+        while True:
+            time.sleep(30)
+    finally:
+        cb.cleanup()
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="dynahost", description="DynaHost - multi-IP LAN HTTP/HTTPS servers with ARP visibility")
+    p.add_argument("--log-level", default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     # up
@@ -248,6 +302,14 @@ def build_parser() -> argparse.ArgumentParser:
     dns.add_argument("--ip", required=True, help="Target IP address")
     dns.add_argument("-o", "--output", help="Write dnsmasq snippet to file")
     dns.set_defaults(func=cmd_dns)
+
+    # compose bridge
+    comp = sub.add_parser("compose", help="Bridge Docker/Podman Compose services into the LAN with alias IPs")
+    comp.add_argument("-f", "--file", default="docker-compose.yml", help="Path to compose file")
+    comp.add_argument("-i", "--interface", help="Network interface (auto-detected if omitted)")
+    comp.add_argument("--ip-start", type=int, default=100, help="Start searching from this last octet value")
+    comp.add_argument("-b", "--base-ip", help="Base IP to start from (otherwise auto-find free IPs)")
+    comp.set_defaults(func=cmd_compose)
 
     return p
 

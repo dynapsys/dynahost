@@ -1,8 +1,18 @@
+"""Lightweight HTTP/HTTPS servers visible in the LAN.
+
+This module provides a simple HTML handler and a manager that binds HTTP/HTTPS
+servers to specific IP addresses. It is used by the CLI to expose a trivial
+landing page for each virtual IP to quickly verify reachability.
+"""
+
 import threading
 import time
 import ssl
+import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import List, Optional, Tuple
+
+logger = logging.getLogger("dynahost.server")
 
 
 class VisibleHTTPHandler(BaseHTTPRequestHandler):
@@ -50,11 +60,15 @@ class VisibleHTTPHandler(BaseHTTPRequestHandler):
         </body>
         </html>
         """
-        self.wfile.write(html.encode("utf-8"))
+        try:
+            self.wfile.write(html.encode("utf-8"))
+        except BrokenPipeError:
+            # client disconnected before we finished
+            pass
 
     def log_message(self, format, *args):
         client_ip = self.client_address[0]
-        print(f"   🌐 [{time.strftime('%H:%M:%S')}] Connection from {client_ip} -> {self.server_ip}")
+        logger.debug("Connection from %s -> %s", client_ip, self.server_ip)
 
 
 class LANWebServerManager:
@@ -82,12 +96,11 @@ class LANWebServerManager:
             self.servers.append(server)
             self.threads.append(thread)
             scheme = "https" if ssl_context else "http"
-            print(f"🌐 {scheme.upper()} server started and visible in LAN:")
-            print(f"   📍 Address: {scheme}://{ip_address}:{port}")
-            print(f"   📝 Content: {content}")
+            logger.info("%s server started: %s://%s:%d", scheme.upper(), scheme, ip_address, port)
+            logger.debug("Handler content: %s", content)
             return server
         except Exception as e:
-            print(f"❌ Failed to start server on {ip_address}:{port}: {e}")
+            logger.error("Failed to start server on %s:%d: %s", ip_address, port, e)
             return None
 
     def test_connectivity(self, ip_address: str, port: int, scheme: str = "http") -> bool:
@@ -101,10 +114,10 @@ class LANWebServerManager:
                 ctx.verify_mode = _ssl.CERT_NONE
             response = urllib.request.urlopen(f"{scheme}://{ip_address}:{port}", timeout=2, context=ctx)
             if response.status == 200:
-                print(f"   ✅ Connectivity test: {ip_address}:{port} responds")
+                logger.info("Connectivity test OK: %s://%s:%d", scheme, ip_address, port)
                 return True
         except Exception:
-            print(f"   ❌ Connectivity test: No response from {ip_address}:{port}")
+            logger.warning("Connectivity test failed: %s://%s:%d", scheme, ip_address, port)
         return False
 
     def stop_all(self) -> None:

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import ssl
+import logging
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 from datetime import datetime, timedelta
@@ -10,6 +11,9 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
+
+
+logger = logging.getLogger("dynahost.certs")
 
 
 def ensure_dir(path: Path) -> None:
@@ -45,6 +49,7 @@ def generate_self_signed_cert(
     The certificate will include all provided SANs (domains and/or IPs).
     """
     ensure_dir(output_dir)
+    logger.info("Generating self-signed certificate in %s (CN=%s)", output_dir, common_name)
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
     subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
@@ -81,6 +86,7 @@ def generate_self_signed_cert(
     with cert_path.open("wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
+    logger.debug("Wrote key to %s and cert to %s", key_path, cert_path)
     return cert_path, key_path
 
 
@@ -94,6 +100,7 @@ def generate_mkcert_cert(output_dir: Path, names: Iterable[str]) -> Tuple[Path, 
     key_file = output_dir / "key.pem"
 
     # Check mkcert availability
+    logger.info("Generating mkcert certificate in %s", output_dir)
     result = subprocess.run(["bash", "-lc", "command -v mkcert"], capture_output=True)
     if result.returncode != 0:
         raise RuntimeError(
@@ -132,6 +139,7 @@ def get_letsencrypt_cert(
     if staging:
         args.append("--staging")
 
+    logger.info("Requesting Let's Encrypt certificate for %s (standalone)", domain)
     proc = subprocess.run(args)
     if proc.returncode != 0:
         raise RuntimeError("certbot failed to obtain certificate. Ensure port 80 is free and domain resolves to this host.")

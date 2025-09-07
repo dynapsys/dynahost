@@ -3,13 +3,18 @@ import sys
 import subprocess
 import ipaddress
 import time
+import logging
 from typing import List, Optional, Tuple
+
+
+logger = logging.getLogger("dynahost.network")
 
 
 class NetworkVisibleManager:
     """Manage virtual IPs that are visible across the LAN.
 
     Mirrors functionality from `network-visible-script.py` but packaged for reuse.
+    Requires root privileges for all operations that change network state.
     """
 
     def __init__(self, interface: str = "eth0"):
@@ -23,8 +28,7 @@ class NetworkVisibleManager:
     @staticmethod
     def check_root() -> None:
         if os.geteuid() != 0:
-            print("❌ This command requires root privileges.")
-            print("Run with: sudo ...")
+            logger.error("This command requires root privileges. Run with sudo.")
             sys.exit(1)
 
     # -----------------
@@ -35,8 +39,11 @@ class NetworkVisibleManager:
         try:
             cmd = "ip route | grep default | awk '{print $5}' | head -1"
             iface = subprocess.check_output(cmd, shell=True).decode().strip()
-            return iface or "eth0"
+            detected = iface or "eth0"
+            logger.debug("Auto-detected interface: %s", detected)
+            return detected
         except Exception:
+            logger.debug("Auto-detect interface failed; falling back to eth0")
             return "eth0"
 
     def get_network_details(self) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -54,9 +61,17 @@ class NetworkVisibleManager:
                 ip = match.group(1)
                 cidr = match.group(2)
                 network = ipaddress.IPv4Network(f"{ip}/{cidr}", strict=False)
+                logger.debug(
+                    "Interface %s -> ip=%s/%s net=%s broadcast=%s",
+                    self.interface,
+                    ip,
+                    cidr,
+                    network.network_address,
+                    network.broadcast_address,
+                )
                 return str(ip), str(network.network_address), str(cidr), str(network.broadcast_address)
         except Exception:
-            pass
+            logger.exception("Failed to get network details for %s", self.interface)
         return None, None, None, None
 
     # -----------------
@@ -67,7 +82,7 @@ class NetworkVisibleManager:
         free_ips: List[str] = []
         checked = 0
 
-        print("\n🔍 Searching for free IP addresses in the network...")
+        logger.info("Searching for free IP addresses in the network (starting from .%d)...", start_ip)
         for ip in network.hosts():
             if int(str(ip).split(".")[-1]) < start_ip:
                 continue
@@ -85,13 +100,13 @@ class NetworkVisibleManager:
                 arp_result = subprocess.run(arp_cmd, shell=True, capture_output=True)
                 if arp_result.returncode != 0:
                     free_ips.append(ip_str)
-                    print(f"   ✅ Free: {ip_str}")
+                    logger.info("Found free IP: %s", ip_str)
                     if len(free_ips) >= num_ips:
                         break
             checked += 1
 
         if len(free_ips) < num_ips:
-            print(f"⚠️ Found only {len(free_ips)} free IPs")
+            logger.warning("Found only %d free IP(s)", len(free_ips))
         return free_ips
 
     # -----------------
@@ -116,11 +131,11 @@ class NetworkVisibleManager:
             # Add to ARP cache
             self.update_arp_cache(ip_address)
 
-            print(f"✅ Added and announced IP: {ip_address} as {label}")
+            logger.info("Added and announced IP %s as %s", ip_address, label)
             self.virtual_ips.append((ip_address, label))
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to add IP {ip_address}: {e}")
+            logger.error("Failed to add IP %s: %s", ip_address, e)
             return False
 
     def announce_arp(self, ip_address: str) -> None:
@@ -134,9 +149,9 @@ class NetworkVisibleManager:
                 cmd2 = f"ip neigh add {ip_address} lladdr {mac} dev {self.interface} nud permanent 2>/dev/null"
                 subprocess.run(cmd2, shell=True)
             self.arp_announced.append(ip_address)
-            print(f"   📢 ARP announced for {ip_address}")
+            logger.debug("Gratuitous ARP announced for %s", ip_address)
         except Exception as e:
-            print(f"   ⚠️ Failed to announce ARP for {ip_address}: {e}")
+            logger.warning("Failed to announce ARP for %s: %s", ip_address, e)
 
     def get_interface_mac(self) -> Optional[str]:
         try:
@@ -163,7 +178,7 @@ class NetworkVisibleManager:
                 subprocess.run(cmd, shell=True)
                 cmd2 = f"iptables -A OUTPUT -s {ip_address} -p tcp --sport {port} -j ACCEPT"
                 subprocess.run(cmd2, shell=True)
-                print(f"   🔥 Firewall configured for {ip_address}:{port}")
+                logger.debug("Firewall INPUT/OUTPUT rules added for %s:%d", ip_address, port)
         except Exception:
             pass
 
@@ -173,11 +188,11 @@ class NetworkVisibleManager:
             subprocess.run(cmd, shell=True, check=True)
             cmd2 = f"arp -d {ip_address} 2>/dev/null"
             subprocess.run(cmd2, shell=True)
-            print(f"✅ Removed IP: {ip_address}")
+            logger.info("Removed IP: %s", ip_address)
         except subprocess.CalledProcessError as e:
-            print(f"⚠️ Failed to remove IP {ip_address}: {e}")
+            logger.warning("Failed to remove IP %s: %s", ip_address, e)
 
     def cleanup(self) -> None:
-        print("\n🧹 Cleaning up...")
+        logger.info("Cleaning up: removing %d virtual IP(s)", len(self.virtual_ips))
         for ip, _label in self.virtual_ips:
             self.remove_virtual_ip(ip)
