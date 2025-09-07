@@ -52,16 +52,30 @@ run_with_timeout() {
 }
 
 find_arpx() {
-  local arpx_bin
-  # Prefer system links we create
-  if [[ -x "/usr/local/bin/arpx" ]]; then
-    arpx_bin="/usr/local/bin/arpx"
-  elif [[ -x "/usr/bin/arpx" ]]; then
-    arpx_bin="/usr/bin/arpx"
+  local arpx_bin=""
+  if [[ -n "${SUDO_USER:-}" ]]; then
+    # Under sudo: prefer the invoking user's arpx
+    arpx_bin=$(sudo -u "${SUDO_USER}" sh -lc 'command -v arpx' 2>/dev/null || true)
+    if [[ -z "$arpx_bin" && -x "/home/${SUDO_USER}/.local/bin/arpx" ]]; then
+      arpx_bin="/home/${SUDO_USER}/.local/bin/arpx"
+    fi
+    # Then system links if not found
+    if [[ -z "$arpx_bin" && -x "/usr/local/bin/arpx" ]]; then
+      arpx_bin="/usr/local/bin/arpx"
+    elif [[ -z "$arpx_bin" && -x "/usr/bin/arpx" ]]; then
+      arpx_bin="/usr/bin/arpx"
+    fi
   else
+    # Not under sudo: prefer current PATH (often ~/.local/bin/arpx)
     arpx_bin="$(command -v arpx || true)"
     if [[ -z "$arpx_bin" && -x "$HOME/.local/bin/arpx" ]]; then
       arpx_bin="$HOME/.local/bin/arpx"
+    fi
+    # Finally system links
+    if [[ -z "$arpx_bin" && -x "/usr/local/bin/arpx" ]]; then
+      arpx_bin="/usr/local/bin/arpx"
+    elif [[ -z "$arpx_bin" && -x "/usr/bin/arpx" ]]; then
+      arpx_bin="/usr/bin/arpx"
     fi
   fi
   printf "%s" "$arpx_bin"
@@ -94,7 +108,8 @@ run_cli_example() {
     fi
     log "sudo may prompt for password"
   fi
-  if run_with_timeout 15 sudo "$arpx_bin" up -n 1 --log-level INFO; then
+  # Use global --log-level for compatibility with older installed CLIs
+  if run_with_timeout 15 sudo "$arpx_bin" --log-level INFO up -n 1; then
     ok "CLI example ran (timed run)"
   else
     err "CLI example failed"
@@ -132,7 +147,7 @@ run_docker_example() {
   local up_rc=$?
   set -e
   if [[ $up_rc -ne 0 ]]; then err "docker compose up failed"; return 0; fi
-  if run_with_timeout 20 sudo "$arpx_bin" compose -f examples/docker/docker-compose.yml --log-level INFO; then
+  if run_with_timeout 20 sudo "$arpx_bin" --log-level INFO compose -f examples/docker/docker-compose.yml; then
     ok "Docker compose bridge ran (timed run)"
   else
     err "Docker compose bridge failed"
@@ -157,7 +172,7 @@ run_podman_example() {
   local up_rc=$?
   set -e
   if [[ $up_rc -ne 0 ]]; then err "podman-compose up failed"; return 0; fi
-  if run_with_timeout 20 sudo "$arpx_bin" compose -f examples/podman/docker-compose.yml --log-level INFO; then
+  if run_with_timeout 20 sudo "$arpx_bin" --log-level INFO compose -f examples/podman/docker-compose.yml; then
     ok "Podman compose bridge ran (timed run)"
   else
     err "Podman compose bridge failed"

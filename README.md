@@ -196,6 +196,9 @@ sudo arpx compose -f docker-compose.yml --base-ip 192.168.1.150
 
 # Podman: use podman-compose with the same file
 sudo arpx compose -f docker-compose.yml
+# If you see "unrecognized arguments: --log-level", either update CLI (make install)
+# or pass log level globally:
+# sudo arpx --log-level INFO compose -f docker-compose.yml
 ```
 
 Requirements:
@@ -210,6 +213,9 @@ Enable mDNS so devices can discover services by name (requires `arpx[mdns]`):
 
 ```bash
 sudo arpx up -n 2 --mdns --mdns-prefix myapp-
+# or, with global flags first (compatible with older CLI builds):
+# sudo arpx --log-level INFO up -n 2 --mdns --mdns-prefix myapp-
+```
 # or for compose
 sudo arpx compose -f docker-compose.yml --mdns
 ```
