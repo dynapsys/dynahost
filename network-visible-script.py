@@ -15,7 +15,6 @@ import ipaddress
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import argparse
 import signal
-import netifaces
 import struct
 
 class NetworkVisibleManager:

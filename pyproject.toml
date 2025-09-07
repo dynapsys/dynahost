@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dynahost"
+dynamic = ["version"]
+description = "Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility"
+readme = "README.md"
+authors = [
+  { name = "Dynapsys", email = "contact@dynapsys.example" }
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+keywords = ["network", "lan", "arp", "http", "https", "certificates", "lets-encrypt", "mkcert"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Development Status :: 3 - Alpha",
+  "Topic :: Internet",
+  "Topic :: System :: Networking",
+]
+dependencies = [
+  "cryptography>=41.0",
+]
+
+[project.optional-dependencies]
+mdns = ["zeroconf>=0.37.0"]
+le = ["certbot>=2.9.0"]
+compose = ["PyYAML>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/dynapsys/dynahost"
+Issues = "https://github.com/dynapsys/dynahost/issues"
+
+[project.scripts]
+dynahost = "dynahost.cli:main"
+
+[tool.hatch.version]
+path = "src/dynahost/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/dynahost/**",
+  "README.md",
+  "LICENSE",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dynahost"]
