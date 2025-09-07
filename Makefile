@@ -1,11 +1,12 @@
 # ARPx Makefile
-.PHONY: help install dev test test-unit test-integration test-watch lint format docs docs-serve clean docker-test security release pre-commit coverage-report benchmark check-deps update-deps free-port-80 example-cli example-api example-docker example-podman example-clean build-dist check-dist publish publish-testpypi
+.PHONY: help install install-user install-system uninstall-user uninstall-system dev test test-unit test-integration test-watch lint format docs docs-serve clean docker-test security release pre-commit coverage-report benchmark check-deps update-deps free-port-80 example-cli example-api example-docker example-podman example-clean test-examples build-dist check-dist publish publish-testpypi
 
 PYTHON := python3
 UV := uv
 PROJECT_NAME := arpx
 # Read version dynamically from src/arpx/__init__.py (__version__ = "x.y.z")
 VERSION := $(shell awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py)
+INSTALL_EXTRAS ?= compose,mdns
 
 # Colours
 BLUE := \033[0;34m
@@ -20,10 +21,66 @@ help: ## Show this help message
 	awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}' | \
 	sort
 
-install: ## Install runtime dependencies only
-	@echo "$(YELLOW)Installing runtime dependencies...$(NC)"
-	$(UV) pip install .
-	@echo "$(GREEN)✓ Installed$(NC)"
+install: ## Install arpx CLI for current user and link system-wide (ensures 'sudo arpx' works)
+	@echo "$(YELLOW)Installing arpx CLI (user) with extras: [$(INSTALL_EXTRAS)]...$(NC)"
+	@set -e; \
+	if ! command -v arpx >/dev/null 2>&1; then \
+		if command -v $(UV) >/dev/null 2>&1; then \
+			$(UV) tool install --force ".[${INSTALL_EXTRAS}]" || $(UV) tool install --force .; \
+		elif command -v pipx >/dev/null 2>&1; then \
+			pipx install --force ".[${INSTALL_EXTRAS}]" || pipx install --force .; \
+		else \
+			$(PYTHON) -m pip install --user ".[${INSTALL_EXTRAS}]" || $(PYTHON) -m pip install --user .; \
+		fi; \
+	else \
+		printf "arpx already present at %s\n" "$$(command -v arpx)"; \
+	fi; \
+	ARPX_BIN=$$(command -v arpx || true); \
+	if [ -z "$$ARPX_BIN" ] && [ -x "$$HOME/.local/bin/arpx" ]; then \
+		ARPX_BIN="$$HOME/.local/bin/arpx"; \
+	fi; \
+	if [ -n "$$ARPX_BIN" ]; then \
+		# Link in /usr/local/bin (commonly in PATH)
+		if ! sudo sh -lc 'test -x "/usr/local/bin/arpx"'; then \
+			echo "Linking /usr/local/bin/arpx -> $$ARPX_BIN (sudo may prompt)"; \
+			sudo ln -sf "$$ARPX_BIN" /usr/local/bin/arpx; \
+		else \
+			printf "/usr/local/bin/arpx exists (%s)\n" "$$(/usr/bin/readlink -f /usr/local/bin/arpx || /bin/ls -l /usr/local/bin/arpx)"; \
+		fi; \
+		# If sudo PATH doesn't include /usr/local/bin, ensure fallback in /usr/bin
+		if ! sudo sh -lc 'command -v arpx >/dev/null 2>&1'; then \
+			echo "'/usr/local/bin' not in sudo PATH; adding fallback /usr/bin/arpx"; \
+			sudo ln -sf "$$ARPX_BIN" /usr/bin/arpx; \
+		fi; \
+		printf "\n$(GREEN)✓ arpx ready. Try: sudo arpx --help$(NC)\n"; \
+	else \
+		echo "$(RED)!! arpx not found after install. Consider: make install-system$(NC)"; \
+		exit 1; \
+	fi
+
+install-user: ## Install arpx CLI to ~/.local/bin (uv tool -> pipx -> pip --user)
+	@set -e; \
+	if command -v $(UV) >/dev/null 2>&1; then \
+		$(UV) tool install --force ".[${INSTALL_EXTRAS}]" || $(UV) tool install --force .; \
+	elif command -v pipx >/dev/null 2>&1; then \
+		pipx install --force ".[${INSTALL_EXTRAS}]" || pipx install --force .; \
+	else \
+		$(PYTHON) -m pip install --user ".[${INSTALL_EXTRAS}]" || $(PYTHON) -m pip install --user .; \
+	fi
+
+install-system: ## Install arpx system-wide (console script in /usr/local/bin)
+	@echo "$(YELLOW)Installing arpx system-wide via pip ($(PYTHON)) with extras: [$(INSTALL_EXTRAS)]...$(NC)"
+	sudo $(PYTHON) -m pip install ".[${INSTALL_EXTRAS}]"
+	@echo "$(GREEN)✓ Installed system-wide. Try: sudo arpx --help$(NC)"
+
+uninstall-user: ## Uninstall user-level arpx CLI and remove system link
+	-$(UV) tool uninstall arpx || true
+	-rm -f $$HOME/.local/bin/arpx || true
+	-sudo rm -f /usr/local/bin/arpx || true
+
+uninstall-system: ## Uninstall system-wide arpx
+	-sudo $(PYTHON) -m pip uninstall -y arpx || true
+	-sudo rm -f /usr/local/bin/arpx || true
 
 dev: ## Install development dependencies
 	@echo "$(YELLOW)Setting up development environment...$(NC)"
@@ -82,6 +139,10 @@ clean: ## Clean build, cache and temporary files
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@$(MAKE) example-clean 2>/dev/null || true
 	@echo "$(GREEN)✓ Clean complete$(NC)"
+
+test-examples: ## Run smoke tests for examples (requires sudo and docker/podman where applicable)
+	@chmod +x scripts/test_examples.sh || true
+	@bash scripts/test_examples.sh
 
 clean-caddy: ## Remove Caddy data that may require sudo
 	@echo "$(YELLOW)Stopping Caddy and purging .arpx/caddy...$(NC)"
