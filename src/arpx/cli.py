@@ -144,16 +144,11 @@ def cmd_up(args: argparse.Namespace) -> int:
             print(f"❌ mDNS requested but not available: {e}")
             return 1
 
-    # Signal handling
+    # Signal handling: perform cleanup in the outer finally to avoid double cleanup
     def signal_handler(sig, frame):
         print("\n\n⚠️ Stopping...")
-        net_manager.cleanup()
-        web_manager.stop_all()
-        try:
-            if mdns_pub:
-                mdns_pub.stop()
-        finally:
-            sys.exit(0)
+        # Cleanup is handled by the outer 'finally' block below
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -298,15 +293,11 @@ def cmd_compose(args: argparse.Namespace) -> int:
             print(f"❌ mDNS requested but not available: {e}")
             return 1
 
-    # signal handling
+    # signal handling: perform cleanup in the outer finally to avoid double cleanup
     def signal_handler(sig, frame):
         print("\n\n⚠️ Stopping compose bridge...")
-        cb.cleanup()
-        try:
-            if mdns_pub:
-                mdns_pub.stop()
-        finally:
-            sys.exit(0)
+        # Cleanup is handled by the outer 'finally' block below
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
