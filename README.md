@@ -96,6 +96,18 @@ ARPx allows you to:
 
 ---
 
+## HTTPS and TLS
+
+`arpx` has built-in support for multiple HTTPS configurations:
+
+- **`self-signed`**: Automatic self-signed certificate generation.
+- **`mkcert`**: Uses `mkcert` for locally-trusted development certificates.
+- **`letsencrypt`**: Obtains a certificate from Let's Encrypt (requires a public domain).
+- **`custom`**: Allows you to provide your own certificate and key files.
+
+These can be used with both `arpx up` to create HTTPS servers, and with `arpx compose` to enable TLS termination for your containerized services.
+
+For detailed instructions and examples, see [**examples/https/README.md**](examples/https/README.md).
 
 ## ARPx Installation
 
@@ -228,6 +240,7 @@ Services will appear as `_http._tcp.local.` or `_https._tcp.local.` with instanc
 - API: `examples/api/simple_api.py`
 - Docker Compose: `examples/docker/docker-compose.yml` + `examples/docker/README.md`
 - Podman Compose: `examples/podman/docker-compose.yml` + `examples/podman/README.md`
+- HTTPS/TLS: `examples/https/README.md`
 
 ### Testing examples (smoke tests)
 
@@ -304,4 +317,3 @@ pytest -q
 ## License
 
 This project is licensed under the Apache License 2.0. See the `LICENSE` file for details. If you distribute this software, please include the license and NOTICE where appropriate.
-
