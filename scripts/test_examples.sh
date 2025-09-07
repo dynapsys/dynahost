@@ -33,10 +33,20 @@ run_with_timeout() {
   if [[ "$1" == "--" ]]; then shift; fi
   if [[ -n "$TIMEOUT_BIN" ]]; then
     # send SIGINT first to allow graceful cleanup, then SIGKILL after 5s
+    set +e
     "$TIMEOUT_BIN" --signal=INT --kill-after=5 "$seconds" "$@"
     local rc=$?
-    # Exit code 124 means timeout in coreutils; treat as success for a smoke test
-    if [[ $rc -eq 124 ]]; then return 0; else return $rc; fi
+    set -e
+    # 124 = timeout command timed out
+    # 137 = 128 + 9 (SIGKILL)
+    if [[ $rc -eq 124 || $rc -eq 137 ]]; then
+      return 0 # Success for a smoke test that is killed by timeout
+    fi
+    if [[ $rc -ne 0 ]]; then
+      err "Command failed with unexpected exit code $rc"
+      return 1
+    fi
+    return 0
   else
     # Fallback: background + sleep + INT + KILL
     set +e
