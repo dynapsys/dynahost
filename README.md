@@ -1,13 +1,35 @@
-# DynaHost
+# ARPx
 
-![PyPI](https://img.shields.io/pypi/v/dynahost)
-![Python Versions](https://img.shields.io/pypi/pyversions/dynahost)
+![PyPI](https://img.shields.io/pypi/v/arpx)
+![Python Versions](https://img.shields.io/pypi/pyversions/arpx)
 ![License](https://img.shields.io/github/license/dynapsys/dynahost)
 ![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/dynahost/ci.yml?branch=main)
 
 Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility and optional Docker/Podman Compose bridging.
 
-DynaHost allows you to:
+## arpx — Multi-IP LAN Server & Compose Bridge
+
+`arpx` is a lightweight **multi-IP LAN HTTP/HTTPS server manager** that makes local services instantly visible across your network using **ARP announcements**.
+It’s ideal for **rapid prototyping, testing, and LAN demos** where you want each service to feel like it’s running on its own host with its own IP and TLS certificate — without touching router configs or setting up complex reverse proxies.
+
+---
+
+### What makes `arpx` different?
+
+Typical local dev setups bind everything to `localhost:port`. Tools like **ngrok/localtunnel** tunnel services out to the cloud, while **Traefik/Caddy/nginx-proxy** are heavy production-grade proxies.
+
+`arpx` fills the gap:
+
+* 🌐 **LAN visibility** – Services get unique IPs visible to *all* devices on your network.
+* 🔑 **HTTPS everywhere** – Built-in cert management (self-signed, mkcert, Let’s Encrypt).
+* 🐳 **Container bridging** – Map Docker/Podman Compose services directly to LAN IPs.
+* ⚡ **Zero router hacks** – No port forwarding, no DNS server required (but dnsmasq snippets are suggested).
+* 🧩 **Lightweight & scriptable** – Simple CLI, easy integration into dev/test workflows.
+
+Think of it as giving your LAN **mini cloud-like behavior**, where each microservice can live on its own IP with real HTTPS, testable from phones, TVs, laptops, and other devices.
+
+
+ARPx allows you to:
 
 - Create multiple virtual IP addresses on a network interface and make them visible to the whole LAN via ARP announcements.
 - Run small HTTP/HTTPS servers bound to those IPs for quick testing and service simulation.
@@ -36,28 +58,68 @@ DynaHost allows you to:
   - `mkcert` for locally-trusted certs (https://github.com/FiloSottile/mkcert)
   - `certbot` and reachable port 80 for Let's Encrypt
 
-## Installation
+
+
+---
+
+### Use cases
+
+* **Prototyping microservices**: spin up multiple APIs on separate IPs, test from any device.
+* **QA and demos**: showcase apps with “real” IPs instead of messy `localhost:8080`.
+* **Edge/lab setups**: where DNS is limited or unavailable, ARP makes services discoverable.
+* **Learning DevOps/networking**: juniors can explore ARP, IP aliasing, and HTTPS hands-on.
+
+---
+
+### Feature summary
+
+* Create multiple **virtual IP addresses** per interface with ARP broadcasts.
+* Run lightweight **HTTP/HTTPS servers** bound to each IP.
+* Generate **TLS certificates**:
+
+  * 🔒 Self-signed
+  * ✅ Locally-trusted (`mkcert`)
+  * 🌍 Public (`Let’s Encrypt`)
+* Bridge **Docker/Podman Compose** stacks into the LAN with alias IPs.
+* Generate **dnsmasq snippets** for local domains.
+
+---
+
+### At a glance: comparison
+
+| Tool                    | Strengths                            | Where `arpx` wins                   |
+| ----------------------- | ------------------------------------ | ----------------------------------- |
+| **ngrok / localtunnel** | Cloud tunneling, public exposure     | LAN-first, no internet needed       |
+| **Traefik / Caddy**     | Production reverse proxy, automation | Lighter, zero config, LAN ARP       |
+| **mkcert**              | Local certs                          | Adds IPs + servers + LAN vis        |
+| **docker-compose**      | Popular for dev setups               | Direct LAN access, no port juggling |
+
+---
+
+
+## ARPx Installation
 
 Using uv:
 
 ```bash
-uv pip install dynahost
+uv pip install arpx
 ```
 
 Or with pip:
 
 ```bash
-pip install dynahost
+pip install arpx
 ```
 
 Optional extras:
 
 ```bash
 # Compose bridging (PyYAML)
-uv pip install "dynahost[compose]"
+uv pip install "arpx[compose]"
 
 # Test utilities (pytest)
-uv pip install "dynahost[test]"
+uv pip install "arpx[test]"
+uv pip install "arpx[mdns]"  # mDNS broadcasting support
 ```
 
 ## Quick start
@@ -65,31 +127,31 @@ uv pip install "dynahost[test]"
 Create 3 virtual IPs with HTTP servers (ports starting at 8000):
 
 ```bash
-sudo dynahost up -n 3
+sudo arpx up -n 3
 ```
 
 Enable HTTPS with a self-signed certificate, include local domains and IPs in SAN:
 
 ```bash
-sudo dynahost up -n 2 --https self-signed --domains myapp.lan,myapp.local
+sudo arpx up -n 2 --https self-signed --domains myapp.lan,myapp.local
 ```
 
 Use mkcert (requires mkcert installed) and include the discovered IPs:
 
 ```bash
-sudo dynahost up -n 2 --https mkcert --domains myapp.lan
+sudo arpx up -n 2 --https mkcert --domains myapp.lan
 ```
 
 Use Let's Encrypt (public DNS must point to your host, and port 80 must be free):
 
 ```bash
-sudo dynahost up --https letsencrypt --domain myapp.example.com --email you@example.com
+sudo arpx up --https letsencrypt --domain myapp.example.com --email you@example.com
 ```
 
 Start from a specific base IP instead of auto-discovery:
 
 ```bash
-sudo dynahost up -n 2 --base-ip 192.168.1.150
+sudo arpx up -n 2 --base-ip 192.168.1.150
 ```
 
 ## Docker/Podman Compose bridge
@@ -98,20 +160,32 @@ Make your Compose services visible on the LAN by assigning each service an alias
 
 ```bash
 # in your project directory with docker-compose.yml
-sudo dynahost compose -f docker-compose.yml
+sudo arpx compose -f docker-compose.yml
 
 # or with a specific base IP range
-sudo dynahost compose -f docker-compose.yml --base-ip 192.168.1.150
+sudo arpx compose -f docker-compose.yml --base-ip 192.168.1.150
 
 # Podman: use podman-compose with the same file
-sudo dynahost compose -f docker-compose.yml
+sudo arpx compose -f docker-compose.yml
 ```
 
 Requirements:
 
 - Your services must publish ports to the host (e.g. `"8080:80"` or `{published: 8080, target: 80}`).
-- DynaHost forwards `alias_ip:host_port -> 127.0.0.1:host_port`, so services remain bound to localhost.
+- arpx forwards `alias_ip:host_port -> 127.0.0.1:host_port`, so services remain bound to localhost.
 - For HTTPS services inside containers, TLS still terminates in the container and works end-to-end.
+
+### mDNS broadcasting (optional)
+
+Enable mDNS so devices can discover services by name (requires `arpx[mdns]`):
+
+```bash
+sudo arpx up -n 2 --mdns --mdns-prefix myapp-
+# or for compose
+sudo arpx compose -f docker-compose.yml --mdns
+```
+
+Services will appear as `_http._tcp.local.` or `_https._tcp.local.` with instance names like `myapp-1._http._tcp.local.`
 
 ## Examples
 
@@ -122,22 +196,22 @@ Requirements:
 
 ## Certificate utilities
 
-Generate a self-signed certificate into .dynahost/certs:
+Generate a self-signed certificate into .arpx/certs:
 
 ```bash
-dynahost cert self-signed --common-name myapp.lan --names myapp.lan,192.168.1.200
+arpx cert self-signed --common-name myapp.lan --names myapp.lan,192.168.1.200
 ```
 
 Generate mkcert certificate:
 
 ```bash
-dynahost cert mkcert --names myapp.lan,192.168.1.200
+arpx cert mkcert --names myapp.lan,192.168.1.200
 ```
 
 Obtain Let's Encrypt certificate (requires root and open port 80):
 
 ```bash
-sudo dynahost cert letsencrypt --domain myapp.example.com --email you@example.com
+sudo arpx cert letsencrypt --domain myapp.example.com --email you@example.com
 ```
 
 ## Local domain (router dnsmasq) suggestions
@@ -145,10 +219,16 @@ sudo dynahost cert letsencrypt --domain myapp.example.com --email you@example.co
 Generate suggestions for configuring a local domain on a router running dnsmasq:
 
 ```bash
-dynahost dns --domain myapp.lan --ip 192.168.1.200 -o dnsmasq.conf
+arpx dns --domain myapp.lan --ip 192.168.1.200 -o dnsmasq.conf
 ```
 
 This prints a `hosts` entry and `dnsmasq` options (either `address=/domain/ip` or an explicit `host-record`). Apply it on your router (e.g., OpenWrt) and restart dnsmasq.
+
+See also sample configs in `docs/router/`:
+
+- `docs/router/dnsmasq.conf.example`
+- `docs/router/hosts.example`
+- `docs/router/openwrt-uci.sh`
 
 ## Notes
 
@@ -158,10 +238,10 @@ This prints a `hosts` entry and `dnsmasq` options (either `address=/domain/ip` o
 
 ## For DevOps and junior engineers
 
-- Start quickly with `sudo dynahost up -n 2` and confirm LAN access from a phone.
-- Use `--log-level DEBUG` to see detailed logs (`dynahost.*` loggers).
-- Bridge your local Compose stack to the LAN with `sudo dynahost compose`.
-- Use `dynahost dns` to generate dnsmasq rules for a local domain like `myapp.lan`.
+- Start quickly with `sudo arpx up -n 2` and confirm LAN access from a phone.
+- Use `--log-level DEBUG` to see detailed logs (`arpx.*` loggers).
+- Bridge your local Compose stack to the LAN with `sudo arpx compose`.
+- Use `arpx dns` to generate dnsmasq rules for a local domain like `myapp.lan`.
 
 ## Contributing
 
@@ -172,3 +252,8 @@ uv pip install -e .
 uv pip install pytest
 pytest -q
 ```
+
+## License
+
+This project is licensed under the Apache License 2.0. See the `LICENSE` file for details. If you distribute this software, please include the license and NOTICE where appropriate.
+

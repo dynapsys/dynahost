@@ -14,6 +14,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Examples: CLI, API, Docker, Podman under `examples/`
 - Tests: unit (compose parser, proxy forwarder), e2e (compose bridge)
 - README: badges, use-cases for DevOps and juniors
+- Rename package to `arpx` (4-letter), keep transitional `dynahost` console alias for now
 
 ## [0.0.2] - 2025-09-07
 
@@ -23,10 +24,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [0.0.1] - 2025-09-07
 
-- Initial public alpha release of DynaHost
+- Initial public alpha release of arpx
 - Multi-IP HTTP/HTTPS servers visible across the LAN
 - TLS certificate utilities (self-signed, mkcert, Let's Encrypt, custom)
 - Local domain (dnsmasq/router) suggestions helper
 - uv packaging and Makefile for publishing
-- CLI entrypoint `dynahost`
+- CLI entrypoint `arpx`
 - Basic README and examples scaffolding

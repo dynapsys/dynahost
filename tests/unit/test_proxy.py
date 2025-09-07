@@ -2,7 +2,7 @@ import socket
 import threading
 import time
 
-from dynahost.proxy import TcpForwarder, TcpForwarderManager
+from arpx.proxy import TcpForwarder, TcpForwarderManager
 
 
 def _start_tcp_echo_server(host: str, port: int):

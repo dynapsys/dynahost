@@ -3,7 +3,7 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dynahost"
+name = "arpx"
 dynamic = ["version"]
 description = "Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility"
 readme = "README.md"
@@ -15,7 +15,7 @@ requires-python = ">=3.8"
 keywords = ["network", "lan", "arp", "http", "https", "certificates", "lets-encrypt", "mkcert"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
+  "License :: OSI Approved :: Apache Software License",
   "Operating System :: POSIX :: Linux",
   "Development Status :: 3 - Alpha",
   "Topic :: Internet",
@@ -36,17 +36,21 @@ Homepage = "https://github.com/dynapsys/dynahost"
 Issues = "https://github.com/dynapsys/dynahost/issues"
 
 [project.scripts]
-dynahost = "dynahost.cli:main"
+arpx = "arpx.cli:main"
+# Temporary alias for transition; remove later if not desired
+dynahost = "arpx.cli:main"
 
 [tool.hatch.version]
-path = "src/dynahost/__init__.py"
+path = "src/arpx/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "src/dynahost/**",
+  "src/arpx/**",
+  "docs/**",
+  "examples/**",
   "README.md",
   "LICENSE",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dynahost"]
+packages = ["src/arpx"]

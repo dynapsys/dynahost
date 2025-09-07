@@ -1,33 +1,33 @@
-# DynaHost – Specyfikacja i szczegóły implementacji
+# arpx – Specyfikacja i szczegóły implementacji
 
 ## Architektura
 
-- `src/dynahost/network.py` – Zarządzanie aliasami IP i widocznością w LAN
+- `src/arpx/network.py` – Zarządzanie aliasami IP i widocznością w LAN
   - Wykorzystuje `ip addr add/del`, `arping`, `ip neigh`, `arp` (net-tools), opcjonalnie `iptables`.
-  - Logowanie przez `logging` (`dynahost.network`).
-- `src/dynahost/server.py` – Lekki serwer HTTP/HTTPS na konkretnym IP
+  - Logowanie przez `logging` (`arpx.network`).
+- `src/arpx/server.py` – Lekki serwer HTTP/HTTPS na konkretnym IP
   - Klasa `LANWebServerManager` zarządza cyklem życia serwerów.
   - Obsługuje HTTPS przez podany `ssl.SSLContext`.
-  - Logowanie przez `logging` (`dynahost.server`).
-- `src/dynahost/certs.py` – Generowanie certyfikatów
+  - Logowanie przez `logging` (`arpx.server`).
+- `src/arpx/certs.py` – Generowanie certyfikatów
   - Self‑signed (cryptography), mkcert, Let's Encrypt (certbot standalone).
   - `build_ssl_context()` tworzy kontekst TLS.
-  - Logowanie przez `logging` (`dynahost.certs`).
-- `src/dynahost/dns.py` – Sugestie konfiguracji lokalnych domen (dnsmasq/hosts)
-- `src/dynahost/compose.py` – Parser `docker-compose.yml` (opcjonalna zależność `PyYAML`)
+  - Logowanie przez `logging` (`arpx.certs`).
+- `src/arpx/dns.py` – Sugestie konfiguracji lokalnych domen (dnsmasq/hosts)
+- `src/arpx/compose.py` – Parser `docker-compose.yml` (opcjonalna zależność `PyYAML`)
   - Wydobywa opublikowane porty TCP dla usług.
-- `src/dynahost/proxy.py` – Prosty TCP forwarder (alias_ip:host_port → 127.0.0.1:host_port)
-- `src/dynahost/terminator.py` – TLS terminator: przyjmuje HTTPS na aliasie i przekazuje HTTP do usługi
-- `src/dynahost/bridge.py` – "Bridge" Compose → LAN IP aliasy + forwardery + (opcjonalnie) terminator TLS
+- `src/arpx/proxy.py` – Prosty TCP forwarder (alias_ip:host_port → 127.0.0.1:host_port)
+- `src/arpx/terminator.py` – TLS terminator: przyjmuje HTTPS na aliasie i przekazuje HTTP do usługi
+- `src/arpx/bridge.py` – "Bridge" Compose → LAN IP aliasy + forwardery + (opcjonalnie) terminator TLS
   - Dla każdej usługi z publikowanymi portami TCP:
     - Tworzy alias IP (widoczny via ARP) na interfejsie.
     - Dodaje reguły iptables (jeśli dostępne).
     - Uruchamia TCP forwarder.
-- `src/dynahost/cli.py` – Główny CLI
-  - `dynahost up` – klasyczny tryb multi‑IP z wbudowanym serwerem.
-  - `dynahost cert` – narzędzia certów.
-  - `dynahost dns` – podpowiedzi domen.
-  - `dynahost compose` – bridge usług (Docker/Podman Compose) do LAN.
+- `src/arpx/cli.py` – Główny CLI
+  - `arpx up` – klasyczny tryb multi‑IP z wbudowanym serwerem.
+  - `arpx cert` – narzędzia certów.
+  - `arpx dns` – podpowiedzi domen.
+  - `arpx compose` – bridge usług (Docker/Podman Compose) do LAN.
 
 ## Przepływy
 

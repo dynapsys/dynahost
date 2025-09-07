@@ -1,0 +1,4 @@
+# /etc/hosts style entry for local testing on a client machine
+# Replace myapp.lan and 192.168.1.200 accordingly
+
+192.168.1.200 myapp.lan

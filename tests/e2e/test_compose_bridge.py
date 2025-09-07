@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from dynahost.network import NetworkVisibleManager
-from dynahost.bridge import ComposeBridge
+from arpx.network import NetworkVisibleManager
+from arpx.bridge import ComposeBridge
 
 
 @pytest.mark.e2e

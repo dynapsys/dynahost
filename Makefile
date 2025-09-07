@@ -1,11 +1,11 @@
-# DynaHost Makefile
+# ARPx Makefile
 .PHONY: help install dev test test-unit test-integration test-watch lint format docs docs-serve clean docker-test security release pre-commit coverage-report benchmark check-deps update-deps free-port-80 example-cli example-api example-docker example-podman example-clean build-dist check-dist publish publish-testpypi
 
 PYTHON := python3
 UV := uv
-PROJECT_NAME := dynahost
-# Read version dynamically from src/dynahost/__init__.py (__version__ = "x.y.z")
-VERSION := $(shell awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py)
+PROJECT_NAME := arpx
+# Read version dynamically from src/arpx/__init__.py (__version__ = "x.y.z")
+VERSION := $(shell awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py)
 
 # Colours
 BLUE := \033[0;34m
@@ -15,7 +15,7 @@ RED := \033[0;31m
 NC := \033[0m # No Color
 
 help: ## Show this help message
-	@echo "$(BLUE)DynaHost Development Commands$(NC)" && echo "" && \
+	@echo "$(BLUE)ARPx Development Commands$(NC)" && echo "" && \
 	grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}' | \
 	sort
@@ -29,17 +29,16 @@ dev: ## Install development dependencies
 	@echo "$(YELLOW)Setting up development environment...$(NC)"
 	$(UV) pip install -e .
 	$(UV) pip install pytest pytest-cov pytest-asyncio pytest-docker black ruff mypy pytest-watch bandit safety pytest-timeout requests twine
-	@chmod +x scripts/test_runner.sh
 	@echo "$(GREEN)✓ Development environment ready$(NC)"
 
 
 test: ## Run all tests with coverage
 	@echo "$(YELLOW)Running tests...$(NC)"
 	@if command -v uv >/dev/null 2>&1; then \
-		uv run pytest tests/ -v --cov=src/dynahost --cov-report=term-missing --cov-report=html; \
+		uv run pytest tests/ -v --cov=src/arpx --cov-report=term-missing --cov-report=html; \
 	else \
 		python3 -c 'import sys; import importlib.util; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' || pip3 install -q pytest pytest-cov requests pytest-timeout; \
-		python3 -m pytest tests/ -v --cov=src/dynahost --cov-report=term-missing --cov-report=html; \
+		python3 -m pytest tests/ -v --cov=src/arpx --cov-report=term-missing --cov-report=html; \
 	fi
 	@echo "$(GREEN)✓ All tests complete$(NC)"
 
@@ -57,7 +56,7 @@ test-watch: ## Run tests in watch mode
 lint: ## Run linting checks (ruff + mypy)
 	@echo "$(YELLOW)Running linters...$(NC)"
 	$(UV) run ruff check src/ tests/
-	$(UV) run mypy src/dynahost --ignore-missing-imports
+	$(UV) run mypy src/arpx --ignore-missing-imports
 	@echo "$(GREEN)✓ Linting complete$(NC)"
 
 format: ## Format code with black and ruff
@@ -76,18 +75,18 @@ docs-serve: ## Serve documentation locally at http://localhost:8000
 
 clean: ## Clean build, cache and temporary files
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
-	rm -rf build/ dist/ *.egg-info .coverage htmlcov/ .pytest_cache/ .env.dynahost Caddyfile
-	# Attempt to remove .dynahost. Some subpaths (caddy/*) may be root-owned; ignore errors.
-	rm -rf .dynahost 2>/dev/null || true
+	rm -rf build/ dist/ *.egg-info .coverage htmlcov/ .pytest_cache/ .env.arpx Caddyfile
+	# Attempt to remove .arpx. Some subpaths may be root-owned; ignore errors.
+	rm -rf .arpx 2>/dev/null || true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@$(MAKE) example-clean 2>/dev/null || true
 	@echo "$(GREEN)✓ Clean complete$(NC)"
 
 clean-caddy: ## Remove Caddy data that may require sudo
-	@echo "$(YELLOW)Stopping Caddy and purging .dynahost/caddy...$(NC)"
-	-@docker rm -f dynahost-caddy >/dev/null 2>&1 || true
-	@sudo rm -rf .dynahost/caddy || true
+	@echo "$(YELLOW)Stopping Caddy and purging .arpx/caddy...$(NC)"
+	-@docker rm -f arpx-caddy >/dev/null 2>&1 || true
+	@sudo rm -rf .arpx/caddy || true
 	@echo "$(GREEN)✓ Caddy data removed$(NC)"
 
 docker-test: ## Run integration tests inside Docker
@@ -95,8 +94,9 @@ docker-test: ## Run integration tests inside Docker
 	$(UV) run pytest tests/integration/ -v -m docker
 	docker-compose -f tests/fixtures/docker-compose.test.yaml down -v
 
+
 security: ## Run security scanners (bandit & safety)
-	$(UV) run bandit -r src/dynahost
+	$(UV) run bandit -r src/arpx
 	$(UV) run safety check
 
 release: ## Build and publish a release
@@ -129,33 +129,33 @@ test-e2e: ## Run end-to-end tests (requires root and Docker; opt-in)
 
 # Versioning
 version-show:
-	@awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py
+	@awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py
 
 
 version-patch:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py); \
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
 	IFS='.' read -r major minor patch <<< "$$current_version"; \
 	new_version="$$major.$$minor.$$((patch + 1))"; \
 	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/dynahost/__init__.py; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
 	echo "✅ Version updated to $$new_version"
 
 
 version-minor:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py); \
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
 	IFS='.' read -r major minor patch <<< "$$current_version"; \
 	new_version="$$major.$$((minor + 1)).0"; \
 	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/dynahost/__init__.py; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
 	echo "✅ Version updated to $$new_version"
 
 
 version-major:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py); \
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
 	IFS='.' read -r major minor patch <<< "$$current_version"; \
 	new_version="$$((major + 1)).0.0"; \
 	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/dynahost/__init__.py; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
 	echo "✅ Version updated to $$new_version"
 
 # Development tools
@@ -168,7 +168,7 @@ dev-setup: install
 
 publish: clean version-patch build-dist check-dist
 	@echo "📦 Publishing package to PyPI..."
-	@new_version=$$(awk -F\" '/^__version__/ {print $$2}' src/dynahost/__init__.py); \
+	@new_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
 	echo "Publishing version $$new_version"; \
 	$(UV) run --with twine twine upload dist/*; \
 	echo "✅ Version $$new_version published to PyPI"
@@ -187,7 +187,7 @@ pre-commit: format lint test ## Run all checks before committing
 	@echo "$(GREEN)✓ Ready to commit!$(NC)"
 
 coverage-report: ## Generate HTML coverage report and open it
-	$(UV) run pytest tests/ --cov=src/dynahost --cov-report=html
+	$(UV) run pytest tests/ --cov=src/arpx --cov-report=html
 	@echo "$(GREEN)✓ Coverage HTML generated at htmlcov/index.html$(NC)"
 
 benchmark: ## Run performance benchmarks
@@ -217,12 +217,12 @@ example-api: ## Run API example (requires sudo)
 example-docker: ## Start Docker example stack and bridge to LAN (requires sudo)
 	@echo "$(YELLOW)Starting Docker example...$(NC)"
 	@docker compose -f examples/docker/docker-compose.yml up -d
-	@sudo dynahost compose -f examples/docker/docker-compose.yml
+	@sudo arpx compose -f examples/docker/docker-compose.yml
 
 example-podman: ## Start Podman example stack and bridge to LAN (requires sudo)
 	@echo "$(YELLOW)Starting Podman example...$(NC)"
 	@podman-compose -f examples/podman/docker-compose.yml up -d
-	@sudo dynahost compose -f examples/podman/docker-compose.yml
+	@sudo arpx compose -f examples/podman/docker-compose.yml
 
 example-clean: ## Clean all example Docker/Podman resources
 	@echo "$(YELLOW)Cleaning example resources...$(NC)"

@@ -1,21 +1,21 @@
-# TODO – DynaHost
+# TODO – arpx
 
 - [x] Packaging with uv + pyproject.toml (hatchling, dynamic version)
-- [x] CLI entrypoint `dynahost` with commands: `up`, `cert`, `dns`, `compose`
+- [x] CLI entrypoint `arpx` with commands: `up`, `cert`, `dns`, `compose`
 - [x] HTTPS support (self-signed, mkcert, Let's Encrypt, custom)
 - [x] Logging: switch internals to `logging` with namespaced loggers
 - [x] Compose bridge: alias IPs + forwarders for published TCP ports
 - [x] README with badges and onboarding for DevOps and juniors
 - [x] CHANGELOG.md, docs/SPEC.md
 - [x] Examples for CLI, API, Docker, Podman
-- [ ] Add `dynahost compose down` to remove alias IPs without Ctrl+C loop
+- [ ] Add `arpx compose down` to remove alias IPs without Ctrl+C loop
 - [ ] Optional mDNS (zeroconf) for local name broadcasting
 - [ ] Detect and avoid DHCP ranges more robustly (parse DHCP leases if available)
 - [ ] nftables backend alternative to iptables
-- [ ] Systemd units to run `dynahost up`/`dynahost compose` as services
+- [ ] Systemd units to run `arpx up`/`arpx compose` as services
 - [ ] CI workflows (GitHub Actions) and badges
 - [ ] More unit tests and a safe e2e harness with containers in CI (rootless?)
-- [ ] Zmienić nazwę z dynahost na krótszą 4-literową, znaleźć wolną nazwę robiąc request bezpośrednio do pypi, a jeśli nie znajdziesz to użyj: multip lub extip lub coś lepszego ale krótkiego
+- [ ] Zmienić nazwę z arpx na krótszą 4-literową, znaleźć wolną nazwę robiąc request bezpośrednio do pypi, a jeśli nie znajdziesz to użyj: multip lub extip lub coś lepszego ale krótkiego
 - [ ] Dodać przykładowe pliki konfiguracyjne dnsmasq/OpenWrt
 - [ ] Podpiąć opcjonalnie mDNS (zeroconf) do broadcastu nazw w sieci
 - [ ] Rozwinąć Makefile o targets stricte dla tego repo (usuwając stare „dynadock-…”)

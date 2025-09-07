@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""API example for DynaHost.
+"""API example for ARPx.
 
 Creates a single alias IP and starts an HTTPS server on it using a self-signed
 certificate, then waits until interrupted.
@@ -15,9 +15,9 @@ import sys
 import time
 from pathlib import Path
 
-from dynahost.network import NetworkVisibleManager
-from dynahost.server import LANWebServerManager
-from dynahost import certs as cert_utils
+from arpx.network import NetworkVisibleManager
+from arpx.server import LANWebServerManager
+from arpx import certs as cert_utils
 
 
 def main() -> int:
@@ -43,7 +43,7 @@ def main() -> int:
     alias_ip = alias_ips[0]
 
     # Self-signed cert
-    out_dir = Path.cwd() / ".dynahost" / "certs" / "api-example"
+    out_dir = Path.cwd() / ".arpx" / "certs" / "api-example"
     cert_file, key_file = cert_utils.generate_self_signed_cert(out_dir, alias_ip, [alias_ip])
     ctx = cert_utils.build_ssl_context(cert_file, key_file)
 

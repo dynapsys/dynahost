@@ -1,0 +1,7 @@
+# Map a local domain to a specific IP (alias created by ARPx)
+# Replace myapp.lan and 192.168.1.200 accordingly
+
+address=/myapp.lan/192.168.1.200
+
+# Alternatively, explicit A record syntax
+host-record=myapp.lan,192.168.1.200

@@ -88,6 +88,44 @@ wheels = [
 ]
 
 [[package]]
+name = "arpx"
+source = { editable = "." }
+dependencies = [
+    { name = "cryptography" },
+]
+
+[package.optional-dependencies]
+compose = [
+    { name = "pyyaml" },
+]
+le = [
+    { name = "certbot", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "certbot", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.9.2'" },
+    { name = "certbot", version = "4.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9.2' and python_full_version < '3.10'" },
+    { name = "certbot", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+mdns = [
+    { name = "zeroconf", version = "0.136.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "zeroconf", version = "0.147.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+test = [
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-timeout" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "certbot", marker = "extra == 'le'", specifier = ">=2.9.0" },
+    { name = "cryptography", specifier = ">=41.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
+    { name = "pytest-timeout", marker = "extra == 'test'", specifier = ">=2.1" },
+    { name = "pyyaml", marker = "extra == 'compose'", specifier = ">=6.0" },
+    { name = "zeroconf", marker = "extra == 'mdns'", specifier = ">=0.37.0" },
+]
+provides-extras = ["compose", "le", "mdns", "test"]
+
+[[package]]
 name = "async-timeout"
 version = "5.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -449,44 +487,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
 ]
-
-[[package]]
-name = "dynahost"
-source = { editable = "." }
-dependencies = [
-    { name = "cryptography" },
-]
-
-[package.optional-dependencies]
-compose = [
-    { name = "pyyaml" },
-]
-le = [
-    { name = "certbot", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "certbot", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.9.2'" },
-    { name = "certbot", version = "4.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9.2' and python_full_version < '3.10'" },
-    { name = "certbot", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-]
-mdns = [
-    { name = "zeroconf", version = "0.136.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "zeroconf", version = "0.147.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-]
-test = [
-    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-    { name = "pytest-timeout" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "certbot", marker = "extra == 'le'", specifier = ">=2.9.0" },
-    { name = "cryptography", specifier = ">=41.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
-    { name = "pytest-timeout", marker = "extra == 'test'", specifier = ">=2.1" },
-    { name = "pyyaml", marker = "extra == 'compose'", specifier = ">=6.0" },
-    { name = "zeroconf", marker = "extra == 'mdns'", specifier = ">=0.37.0" },
-]
-provides-extras = ["compose", "le", "mdns", "test"]
 
 [[package]]
 name = "exceptiongroup"

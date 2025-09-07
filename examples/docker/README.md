@@ -1,7 +1,7 @@
 # Docker example
 
 This example spins up two simple web services and shows how to bridge them into the LAN
-using DynaHost so that each service gets its own alias IP reachable from other devices.
+using arpx so that each service gets its own alias IP reachable from other devices.
 
 Steps:
 
@@ -14,13 +14,13 @@ docker compose -f examples/docker/docker-compose.yml up -d
 2. Bridge to LAN with alias IPs (requires root):
 
 ```bash
-sudo dynahost compose -f examples/docker/docker-compose.yml --log-level INFO
+sudo arpx compose -f examples/docker/docker-compose.yml --log-level INFO
 ```
 
 Optional: add an HTTPS terminator on alias IPs using a self-signed cert:
 
 ```bash
-sudo dynahost compose -f examples/docker/docker-compose.yml \
+sudo arpx compose -f examples/docker/docker-compose.yml \
   --https self-signed --domains myapp.lan --https-port 443
 ```
 

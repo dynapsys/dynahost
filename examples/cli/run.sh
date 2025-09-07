@@ -13,4 +13,4 @@ fi
 # Access from another device:
 #   https://<alias_ip_1>:8000  and  https://<alias_ip_2>:8001
 
-dynahost up -n 2 --https self-signed --domains myapp.lan --log-level INFO
+arpx up -n 2 --https self-signed --domains myapp.lan --log-level INFO

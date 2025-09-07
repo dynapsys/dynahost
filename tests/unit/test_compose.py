@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from dynahost import compose as compose_mod
-from dynahost.compose import parse_compose_services, ServicePort
+from arpx import compose as compose_mod
+from arpx.compose import parse_compose_services, ServicePort
 
 
 def test_parse_compose_simple(tmp_path: Path):
