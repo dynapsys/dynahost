@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import shutil
 import signal
 import sys
 import time
@@ -14,6 +15,7 @@ from .dns import suggest_dns
 from .bridge import ComposeBridge
 from .mdns import MDNSPublisher
 from . import __version__
+from .utils import check_dependencies
 
 
 def _setup_logging(log_level: str) -> None:
@@ -57,6 +59,9 @@ def print_summary(created_ips: List[str], base_port: int, scheme: str = "http") 
 
 def cmd_up(args: argparse.Namespace) -> int:
     _setup_logging(args.log_level)
+    if not check_dependencies(["ip", "arping"]):
+        return 1
+
     # Root required
     NetworkVisibleManager.check_root()
 
@@ -196,6 +201,15 @@ def cmd_up(args: argparse.Namespace) -> int:
 
 def cmd_cert(args: argparse.Namespace) -> int:
     _setup_logging(args.log_level)
+
+    deps = []
+    if args.mode == "mkcert":
+        deps.append("mkcert")
+    elif args.mode == "letsencrypt":
+        deps.append("certbot")
+    if not check_dependencies(deps):
+        return 1
+
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
     if args.mode == "self-signed":
@@ -238,6 +252,12 @@ def cmd_dns(args: argparse.Namespace) -> int:
 
 def cmd_compose(args: argparse.Namespace) -> int:
     _setup_logging(args.log_level)
+
+    # Check for docker or podman-compose
+    if not (shutil.which("docker") or shutil.which("podman-compose")):
+        check_dependencies(["docker"])  # Will fail and print hints for both
+        return 1
+
     # root required; ComposeBridge will also check
     NetworkVisibleManager.check_root()
 
