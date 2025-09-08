@@ -1,0 +1,45 @@
+# Dockerfile for testing arpx with root privileges
+
+# Use a base image with Python and common tools
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Install system dependencies required for arpx and testing
+RUN apt-get update && apt-get install -y \
+    sudo \
+    iproute2 \
+    iputils-ping \
+    arping \
+    net-tools \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user and add it to the sudo group
+RUN useradd -m -s /bin/bash testuser && \
+    usermod -aG sudo testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Set up the working directory
+WORKDIR /app
+
+# Copy the application source code
+COPY . .
+
+# Install uv, the python package manager used by the project
+RUN pip install uv
+
+# Install the application and its development dependencies
+# We run this as the root user to ensure all base packages are available
+RUN uv pip install --system -e ".[compose,mdns]"
+# Install dev dependencies directly, as `make dev` doesn't support passing --system
+RUN uv pip install --system pytest pytest-cov pytest-asyncio pytest-docker black ruff mypy pytest-watch bandit safety pytest-timeout requests twine
+
+# Switch to the non-root user
+USER testuser
+
+# Set the default command to run a shell
+CMD ["/bin/bash"]
