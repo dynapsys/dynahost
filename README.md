@@ -2,8 +2,9 @@
 
 ![PyPI](https://img.shields.io/pypi/v/arpx)
 ![Python Versions](https://img.shields.io/pypi/pyversions/arpx)
-![License](https://img.shields.io/github/license/dynapsys/arpx)
-![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/arpx/ci.yml?branch=main)
+![License](https://img.shields.io/github/license/dynapsys/dynahost)
+![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/dynahost/ci.yml?branch=main)
+![Coverage](https://img.shields.io/badge/Coverage-32%25-green)
 
 **Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility and optional Docker/Podman Compose bridging.**
 
@@ -19,7 +20,9 @@
 - [Quick Start](#quick-start)
 - [Docker/Podman Compose Bridge](#dockerpodman-compose-bridge)
 - [Architecture](#architecture)
+- [Navigation Menu](#navigation-menu)
 - [Contributing](#contributing)
+- [Author](#author)
 - [License](#license)
 
 ---
@@ -94,17 +97,56 @@ For more detailed examples, see the `examples/` directory.
 
 For a detailed explanation of the internal components and workflows, see the [**Architecture Overview**](docs/architecture.md).
 
+### Navigation Menu
+
+Explore the project structure and key files:
+- **Documentation:**
+  - [Architecture Overview](docs/architecture.md) - Understand the internal design and workflows.
+  - [Specification](docs/SPEC.md) - Detailed technical specification.
+- **Core Code:**
+  - [CLI Entry Point](src/arpx/cli.py) - Main command-line interface logic.
+  - [Network Manager](src/arpx/network.py) - Handles virtual IPs and ARP announcements.
+  - [Certificate Utilities](src/arpx/certs.py) - TLS certificate generation.
+- **Tests:**
+  - [Unit Tests for Network](tests/unit/test_network.py) - Tests for network operations.
+  - [Unit Tests for Certs](tests/unit/test_certs.py) - Tests for certificate handling.
+  - [Unit Tests for Utils](tests/unit/test_utils.py) - Tests for utility functions.
+
 ### Contributing
 
-PRs are welcome! To set up a development environment and run tests:
+Contributions are welcome! Here's how you can get involved:
 
-```bash
-# Install dev dependencies
-make dev
+1. **Setup Development Environment:**
+   ```bash
+   # Clone the repository if you haven't already
+   git clone https://github.com/dynapsys/dynahost.git
+   cd dynahost
 
-# Run all tests
-make test
-```
+   # Install development dependencies
+   make dev
+   ```
+2. **Run Tests:**
+   ```bash
+   # Run all tests to ensure nothing is broken
+   make test
+   ```
+3. **Coding Guidelines:**
+   - Follow PEP 8 for Python code style.
+   - Use type hints where applicable.
+   - Add unit tests for new functionality.
+   - Format code with `make format` before committing.
+4. **Submit a Pull Request:**
+   - Create a branch for your feature or bugfix.
+   - Commit your changes with descriptive messages.
+   - Push your branch to the repository.
+   - Open a pull request with a clear description of your changes.
+
+For major changes, please open an issue first to discuss what you would like to change.
+
+### Author
+
+- **Name:** Dynapsys Team
+- **Contact:** [GitHub Issues](https://github.com/dynapsys/dynahost/issues)
 
 ### License
 
