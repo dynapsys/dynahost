@@ -2,8 +2,8 @@ services:
   web1:
     image: docker.io/library/nginx:alpine
     ports:
-      - "8082:80"
+      - "8084:80"
   web2:
     image: docker.io/nginxdemos/hello
     ports:
-      - "8083:80"
+      - "8085:80"

@@ -50,7 +50,7 @@
   2. Przydział aliasów IP (auto lub z `--base-ip`).
   3. Dla każdego host_port: iptables ACCEPT oraz forwarder alias_ip:host_port → 127.0.0.1:host_port.
   4. (Opcja) Terminator HTTPS na aliasie (domyślnie port 443) → HTTP do pierwszego opublikowanego portu.
-  4. Sprzątanie: zamknięcie forwarderów, usunięcie aliasów IP.
+  5. Sprzątanie: zamknięcie forwarderów, usunięcie aliasów IP.
 
 ## Bezpieczeństwo i uwagi
 

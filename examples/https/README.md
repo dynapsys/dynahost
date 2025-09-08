@@ -1,63 +1,63 @@
-# Przykłady użycia HTTPS i TLS z arpx
+# HTTPS and TLS Usage Examples with arpx
 
-Ten katalog demonstruje, jak używać `arpx` do serwowania treści przez HTTPS przy użyciu różnych metod zarządzania certyfikatami.
+This directory demonstrates how to use `arpx` to serve content over HTTPS using various certificate management methods.
 
-## Wymagania wstępne
+## Prerequisites
 
-- Linux z uprawnieniami `sudo`.
-- `arpx` zainstalowany i poprawnie skonfigurowany dla `sudo`. Jeśli nie, uruchom `make install` z głównego katalogu repozytorium.
-- `mkcert` zainstalowany dla przykładu z `mkcert`.
+- Linux with `sudo` privileges.
+- `arpx` installed and properly configured for `sudo`. If not, run `make install` from the main repository directory.
+- `mkcert` installed for the mkcert example.
 
 ---
 
-## 1. Serwery HTTPS z `arpx up`
+## 1. HTTPS Servers with `arpx up`
 
-Ta komenda tworzy wirtualne adresy IP i uruchamia na nich serwery HTTPS.
+This command creates virtual IP addresses and starts HTTPS servers on them.
 
-### a) Certyfikat samopodpisany (Self-Signed)
+### a) Self-Signed Certificate
 
-Najszybszy sposób na uruchomienie HTTPS do testów lokalnych. Przeglądarka wyświetli ostrzeżenie o bezpieczeństwie.
+The quickest way to run HTTPS for local testing. The browser will show a security warning.
 
 ```bash
-# Uruchom 2 serwery HTTPS z certyfikatem samopodpisanym
-# Certyfikat będzie ważny dla 'myapp.lan' i automatycznie przydzielonych adresów IP.
+# Start 2 HTTPS servers with a self-signed certificate
+# The certificate will be valid for 'myapp.lan' and the auto-assigned IPs.
 sudo arpx up -n 2 --https self-signed --domains myapp.lan
 ```
 
-### b) Użycie `mkcert` (zalecane do developmentu)
+### b) Using `mkcert` (recommended for development)
 
-Jeśli `mkcert` jest zainstalowany, a jego główny certyfikat (CA) jest zaufany w systemie, przeglądarka nie wyświetli ostrzeżeń.
+If `mkcert` is installed and its root certificate (CA) is trusted on the system, the browser will not show warnings.
 
 ```bash
-# Uruchom 2 serwery HTTPS z certyfikatem od mkcert
+# Start 2 HTTPS servers with a certificate from mkcert
 sudo arpx up -n 2 --https mkcert --domains dev.app.lan
 ```
 
-### c) Użycie własnego certyfikatu
+### c) Using a Custom Certificate
 
-Jeśli posiadasz własne pliki certyfikatu i klucza.
+If you have your own certificate and key files.
 
 ```bash
-# Uruchom serwer HTTPS, podając ścieżki do własnych plików
-sudo arpx up -n 1 --https custom --cert-file /sciezka/do/cert.pem --key-file /sciezka/do/key.pem
+# Start an HTTPS server, providing paths to your own files
+sudo arpx up -n 1 --https custom --cert-file /path/to/cert.pem --key-file /path/to/key.pem
 ```
 
 ---
 
-## 2. Terminacja TLS dla usług w kontenerach (`arpx compose`)
+## 2. TLS Termination for Containerized Services (`arpx compose`)
 
-Ta funkcja uruchamia proxy z terminacją TLS przed Twoimi kontenerami. `arpx` obsługuje ruch HTTPS z sieci LAN i przekazuje go jako zwykły ruch HTTP do Twoich usług.
+This feature runs a proxy with TLS termination in front of your containers. `arpx` handles HTTPS traffic from the LAN and forwards it as plain HTTP to your services.
 
 ```bash
-# 1. Uruchom swoje kontenery
+# 1. Start your containers
 docker compose -f examples/docker/docker-compose.yml up -d
 
-# 2. Uruchom mostkowanie z terminacją TLS na porcie 443
-# Ruch na https://<alias_ip>:443 zostanie odszyfrowany i przekierowany do kontenera.
+# 2. Start bridging with TLS termination on port 443
+# Traffic to https://<alias_ip>:443 will be decrypted and forwarded to the container.
 sudo arpx compose -f examples/docker/docker-compose.yml \
   --https self-signed \
   --domains myapp.lan \
   --https-port 443
 ```
 
-Możesz również użyć `--https mkcert` zamiast `self-signed`.
+You can also use `--https mkcert` instead of `self-signed`.

@@ -26,6 +26,13 @@ sudo arpx compose -f examples/podman/docker-compose.yml \
   --https mkcert --domains myapp.lan --https-port 443
 ```
 
+The command prints each service with its alias IP and ports, e.g.:
+
+```
+web1: http://192.168.1.120:8084
+web2: http://192.168.1.121:8085
+```
+
 Press Ctrl+C to stop the bridge and clean up alias IPs.
 
 Cleanup containers:

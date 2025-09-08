@@ -29,8 +29,8 @@ sudo arpx compose -f examples/docker/docker-compose.yml \
 The command prints each service with its alias IP and ports, e.g.:
 
 ```
-web1: http://192.168.1.120:8080
-web2: http://192.168.1.121:8081
+web1: http://192.168.1.120:8082
+web2: http://192.168.1.121:8083
 ```
 
 Press Ctrl+C to stop and clean up alias IPs.
