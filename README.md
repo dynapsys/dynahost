@@ -18,6 +18,7 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Real-World Use Case: Solving Port Conflicts in Docker Projects](#real-world-use-case-solving-port-conflicts-in-docker-projects)
 - [Docker/Podman Compose Bridge](#dockerpodman-compose-bridge)
 - [Architecture](#architecture)
 - [Navigation Menu](#navigation-menu)
@@ -81,6 +82,32 @@ Enable HTTPS with a self-signed certificate:
 ```bash
 sudo arpx up -n 2 --https self-signed --domains myapp.lan
 ```
+
+### Real-World Use Case: Solving Port Conflicts in Docker Projects
+
+Imagine you're working on multiple Docker-based projects simultaneously. One project, already running on your local machine, occupies port 80 for its web server. You need to test a new project that also defaults to port 80. Normally, you'd face a dilemma: either modify the new project's configuration (and potentially dig through someone else's code to update hardcoded port references and URIs), or stop the first project to free up the port. Both options are time-consuming and disruptive to your workflow.
+
+With `arpx`, this problem disappears. Here's how it works:
+
+- **Dynamic IP Allocation**: `arpx` generates new, unique IP addresses within your local network's DHCP range. These virtual IPs are assigned to your services, so you don't need to worry about port conflicts on your primary machine IP.
+- **Zero Configuration**: Instead of reconfiguring ports or URIs in your Docker project, `arpx` bridges the services to these new IPs. For instance, even if port 80 is occupied on your machine, you can run the new project's service on port 80 of a dynamically assigned IP.
+- **LAN Visibility**: These IPs are visible across your local network, allowing you to test from other devices (like a phone or another computer) without touching router settings.
+
+**Scenario Example**:
+A developer named Alex is running a web app on `localhost:80`. He clones a new open-source project that also binds to port 80 by default. Instead of editing the project's `docker-compose.yml` or source code (which could have hardcoded URIs and untested default port assumptions), Alex uses `arpx`:
+
+```bash
+# Bridge the new project's services to unique LAN IPs
+sudo arpx compose -f docker-compose.yml
+```
+
+`arpx` assigns new IPs (e.g., `192.168.1.120` and `192.168.1.121`) to each service in the Docker Compose file, mapping their ports without conflicts. Alex can now access the new app at `http://192.168.1.120:80` while his original app remains on `localhost:80`. No code changes, no downtime.
+
+**Addressing Common Doubts**:
+- *Can't Docker just redirect traffic to different ports?* While Docker allows port mapping (e.g., `-p 8080:80`), this often isn't enough. Many projects have hardcoded URIs or dependencies on specific ports across multiple services, requiring extensive reconfiguration and testing. `arpx` sidesteps this by providing entirely new IPs, avoiding the need to touch port configurations.
+- *Why not run Docker in a virtual environment?* Virtual environments or separate workstations add overhead and complexity. `arpx` keeps everything on your local machine, seamlessly integrating with your existing setup.
+
+This makes `arpx` uniquely powerful for developers dealing with complex, pre-built projects or needing to test across multiple network-visible IPs without router hacks.
 
 ### Docker/Podman Compose Bridge
 
