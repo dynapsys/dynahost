@@ -4,7 +4,7 @@ import ssl
 import logging
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import ipaddress
 
 from cryptography import x509
@@ -61,8 +61,8 @@ def generate_self_signed_cert(
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + timedelta(days=valid_days))
+        .not_valid_before(datetime.now(timezone.utc))
+        .not_valid_after(datetime.now(timezone.utc) + timedelta(days=valid_days))
     )
     if san_entries:
         builder = builder.add_extension(

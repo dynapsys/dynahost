@@ -15,11 +15,9 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-help: ## Show this help message
-	@echo "$(BLUE)ARPx Development Commands$(NC)" && echo "" && \
-	grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
-	awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}' | \
-	sort
+# ==============================================================================
+# Installation & Dependencies
+# ==============================================================================
 
 install: ## Install arpx CLI for current user and link system-wide (ensures 'sudo arpx' works)
 	@echo "$(YELLOW)Installing arpx CLI (user) with extras: [$(INSTALL_EXTRAS)]...$(NC)"
@@ -50,12 +48,9 @@ uninstall-system: ## Uninstall system-wide arpx
 	-sudo $(PYTHON) -m pip uninstall -y arpx || true
 	-sudo rm -f /usr/local/bin/arpx || true
 
-dev: ## Install development dependencies
-	@echo "$(YELLOW)Setting up development environment...$(NC)"
-	$(UV) pip install -e .
-	$(UV) pip install pytest pytest-cov pytest-asyncio pytest-docker black ruff mypy pytest-watch bandit safety pytest-timeout requests twine
-	@echo "$(GREEN)✓ Development environment ready$(NC)"
-
+# ==============================================================================
+# Testing & Quality
+# ==============================================================================
 
 test: ## Run all tests with coverage
 	@echo "$(YELLOW)Running tests...$(NC)"
@@ -73,8 +68,6 @@ test-unit: ## Run unit tests only
 test-integration: ## Run integration tests only
 	$(UV) run pytest tests/integration/ -v -m integration
 
- 
-
 test-watch: ## Run tests in watch mode
 	$(UV) run pytest-watch tests/ -v
 
@@ -90,13 +83,26 @@ format: ## Format code with black and ruff
 	$(UV) run ruff check --fix src/ tests/
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
-docs: ## Build static documentation
-	@echo "$(YELLOW)Building documentation...$(NC)"
-	cd docs && $(UV) run mkdocs build
-	@echo "$(GREEN)✓ Documentation built in docs/site/$(NC)"
+# ==============================================================================
+# Documentation & Release
+# ==============================================================================
+
+docs: ## Generate documentation (placeholder)
+	@echo "$(YELLOW)Documentation generation placeholder...$(NC)"
+	@echo "See docs/README.md for manual instructions."
 
 docs-serve: ## Serve documentation locally at http://localhost:8000
 	cd docs && $(UV) run mkdocs serve
+
+release: ## Build and publish a release
+	@echo "$(YELLOW)Creating release $(VERSION)...$(NC)"
+	uv build
+	docker build -t $(PROJECT_NAME):$(VERSION) -t $(PROJECT_NAME):latest .
+	@echo "$(GREEN)✓ Release artifacts built$(NC)"
+
+# ==============================================================================
+# Cleanup
+# ==============================================================================
 
 clean: ## Clean build, cache and temporary files
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
@@ -108,110 +114,28 @@ clean: ## Clean build, cache and temporary files
 	@$(MAKE) example-clean 2>/dev/null || true
 	@echo "$(GREEN)✓ Clean complete$(NC)"
 
+# ==============================================================================
+# Development & Miscellaneous
+# ==============================================================================
+
+dev: ## Install development dependencies
+	@echo "$(YELLOW)Setting up development environment...$(NC)"
+	$(UV) pip install -e .
+	$(UV) pip install pytest pytest-cov pytest-asyncio pytest-docker black ruff mypy pytest-watch bandit safety pytest-timeout requests twine
+	@echo "$(GREEN)✓ Development environment ready$(NC)"
+
 test-examples: ## Run smoke tests for examples (requires sudo and docker/podman where applicable)
 	@chmod +x scripts/test_examples.sh || true
 	@bash scripts/test_examples.sh
-
-clean-caddy: ## Remove Caddy data that may require sudo
-	@echo "$(YELLOW)Stopping Caddy and purging .arpx/caddy...$(NC)"
-	-@docker rm -f arpx-caddy >/dev/null 2>&1 || true
-	@sudo rm -rf .arpx/caddy || true
-	@echo "$(GREEN)✓ Caddy data removed$(NC)"
 
 docker-test: ## Run integration tests inside Docker
 	docker compose -f tests/fixtures/docker-compose.test.yaml up -d
 	$(UV) run pytest tests/integration/ -v -m docker
 	docker compose -f tests/fixtures/docker-compose.test.yaml down -v
 
-
 security: ## Run security scanners (bandit & safety)
 	$(UV) run bandit -r src/arpx
 	$(UV) run safety check
-
-release: ## Build and publish a release
-	@echo "$(YELLOW)Creating release $(VERSION)...$(NC)"
-	uv build
-	docker build -t $(PROJECT_NAME):$(VERSION) -t $(PROJECT_NAME):latest .
-	@echo "$(GREEN)✓ Release artifacts built$(NC)"
-
-# ---------------------------
-# PyPI publishing helpers
-# ---------------------------
-
-build-dist: ## Build sdist and wheel into dist/
-	uv build
-
-check-dist: ## Check built distributions with twine
-	$(UV) run --with twine twine check dist/*
-
-
-
-build:
-	$(PYTHON) -m build
-
-test-e2e: ## Run end-to-end tests (requires root and Docker; opt-in)
-	@if command -v uv >/dev/null 2>&1; then \
-		uv run pytest -v -m e2e; \
-	else \
-		python3 -m pytest -v -m e2e; \
-	fi
-
-# Versioning
-version-show:
-	@awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py
-
-
-version-patch:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
-	IFS='.' read -r major minor patch <<< "$$current_version"; \
-	new_version="$$major.$$minor.$$((patch + 1))"; \
-	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
-	echo "✅ Version updated to $$new_version"
-
-
-version-minor:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
-	IFS='.' read -r major minor patch <<< "$$current_version"; \
-	new_version="$$major.$$((minor + 1)).0"; \
-	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
-	echo "✅ Version updated to $$new_version"
-
-
-version-major:
-	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
-	IFS='.' read -r major minor patch <<< "$$current_version"; \
-	new_version="$$((major + 1)).0.0"; \
-	echo "Bumping version from $$current_version to $$new_version"; \
-	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
-	echo "✅ Version updated to $$new_version"
-
-# Development tools
-dev-setup: install
-	@echo "🔧 Setting up the development environment..."
-	$(PYTHON) -m pip install -U pip
-	$(PYTHON) -m pip install flake8 black isort
-	@echo "✅ Development environment ready"
-
-# Publishing with automatic versioning
-
-publish: clean version-patch build-dist check-dist
-	@echo "📦 Publishing package to PyPI..."
-	@new_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
-	echo "Publishing version $$new_version"; \
-	$(UV) run --with twine twine upload dist/*; \
-	echo "✅ Version $$new_version published to PyPI"
-
-publish-testpypi: ## Upload package to TestPyPI (requires TESTPYPI_TOKEN env var)
-	uv build
-	$(UV) run --with twine twine check dist/*
-	$(UV) run --with twine twine upload -r testpypi dist/*
-
-publish-pypi: version-patch ## Upload package to PyPI (requires PYPI_TOKEN env var)
-	uv build
-	$(UV) run --with twine twine check dist/*
-	$(UV) run --with twine twine upload dist/*
 
 pre-commit: format lint test ## Run all checks before committing
 	@echo "$(GREEN)✓ Ready to commit!$(NC)"
@@ -259,5 +183,69 @@ example-clean: ## Clean all example Docker/Podman resources
 	-@docker compose -f examples/docker/docker-compose.yml down -v 2>/dev/null || true
 	-@podman-compose -f examples/podman/docker-compose.yml down -v 2>/dev/null || true
 	@echo "$(GREEN)✓ Examples cleaned$(NC)"
+
+build-dist: ## Build sdist and wheel into dist/
+	uv build
+
+check-dist: ## Check built distributions with twine
+	$(UV) run --with twine twine check dist/*
+
+publish: clean version-patch build-dist check-dist
+	@echo "📦 Publishing package to PyPI..."
+	@new_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
+	echo "Publishing version $$new_version"; \
+	$(UV) run --with twine twine upload dist/*; \
+	echo "✅ Version $$new_version published to PyPI"
+
+publish-testpypi: ## Upload package to TestPyPI (requires TESTPYPI_TOKEN env var)
+	uv build
+	$(UV) run --with twine twine check dist/*
+	$(UV) run --with twine twine upload -r testpypi dist/*
+
+publish-pypi: version-patch ## Upload package to PyPI (requires PYPI_TOKEN env var)
+	uv build
+	$(UV) run --with twine twine check dist/*
+	$(UV) run --with twine twine upload dist/*
+
+# Versioning
+version-show:
+	@awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py
+
+version-patch:
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
+	IFS='.' read -r major minor patch <<< "$$current_version"; \
+	new_version="$$major.$$minor.$$((patch + 1))"; \
+	echo "Bumping version from $$current_version to $$new_version"; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
+	echo "✅ Version updated to $$new_version"
+
+version-minor:
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
+	IFS='.' read -r major minor patch <<< "$$current_version"; \
+	new_version="$$major.$$((minor + 1)).0"; \
+	echo "Bumping version from $$current_version to $$new_version"; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
+	echo "✅ Version updated to $$new_version"
+
+version-major:
+	@current_version=$$(awk -F\" '/^__version__/ {print $$2}' src/arpx/__init__.py); \
+	IFS='.' read -r major minor patch <<< "$$current_version"; \
+	new_version="$$((major + 1)).0.0"; \
+	echo "Bumping version from $$current_version to $$new_version"; \
+	sed -i "s/__version__ = \"$$current_version\"/__version__ = \"$$new_version\"/" src/arpx/__init__.py; \
+	echo "✅ Version updated to $$new_version"
+
+# Development tools
+dev-setup: install
+	@echo "🔧 Setting up the development environment..."
+	$(PYTHON) -m pip install -U pip
+	$(PYTHON) -m pip install flake8 black isort
+	@echo "✅ Development environment ready"
+
+help: ## Show this help message
+	@echo "$(BLUE)ARPx Development Commands$(NC)" && echo "" && \
+	grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}' | \
+	sort
 
 .DEFAULT_GOAL := help

@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from subprocess import CalledProcessError
 
 from arpx.network import NetworkVisibleManager
 
@@ -56,6 +57,55 @@ class TestNetworkManager(unittest.TestCase):
         manager = NetworkVisibleManager(interface='eth0')
         details = manager.get_network_details()
         self.assertEqual(details, (None, None, None, None))
+
+    @patch('subprocess.run')
+    def test_find_free_ips_success(self, mock_run):
+        """Test finding free IPs successfully."""
+        # Simulate that all pings and arps fail, indicating IPs are free
+        mock_run.return_value = MagicMock(returncode=1)
+        manager = NetworkVisibleManager(interface='eth0')
+        ips = manager.find_free_ips('192.168.1.0', '24', num_ips=2, start_ip=100)
+        self.assertEqual(len(ips), 2)
+        self.assertEqual(ips, ['192.168.1.100', '192.168.1.101'])
+        # 2 calls for ping, 2 for arping
+        self.assertEqual(mock_run.call_count, 4)
+
+    @patch('subprocess.run')
+    def test_find_free_ips_some_taken(self, mock_run):
+        """Test finding free IPs when some are already taken."""
+        def run_side_effect(cmd, shell, capture_output):
+            ip = cmd.split()[-1]
+            if ip == '192.168.1.100':
+                return MagicMock(returncode=0)  # IP taken
+            return MagicMock(returncode=1)      # IP free
+        mock_run.side_effect = run_side_effect
+
+        manager = NetworkVisibleManager(interface='eth0')
+        ips = manager.find_free_ips('192.168.1.0', '24', num_ips=2, start_ip=100)
+        self.assertEqual(len(ips), 2)
+        self.assertEqual(ips, ['192.168.1.101', '192.168.1.102'])
+
+    @patch('subprocess.run')
+    @patch('arpx.network.NetworkVisibleManager.get_interface_mac', return_value='00:11:22:33:44:55')
+    def test_add_virtual_ip_with_visibility_success(self, mock_get_mac, mock_run):
+        """Test successfully adding a virtual IP."""
+        mock_run.return_value = MagicMock(returncode=0)
+        manager = NetworkVisibleManager(interface='eth0')
+        result = manager.add_virtual_ip_with_visibility('192.168.1.150', 'test1', '24')
+
+        self.assertTrue(result)
+        self.assertEqual(len(manager.virtual_ips), 1)
+        self.assertEqual(manager.virtual_ips[0], ('192.168.1.150', 'eth0:test1', '24'))
+        # ip addr add, ip_forward, proxy_arp, arping, ip neigh, arp -s
+        self.assertGreaterEqual(mock_run.call_count, 6)
+
+    @patch('subprocess.run', side_effect=CalledProcessError(1, 'cmd'))
+    def test_add_virtual_ip_with_visibility_failure(self, mock_run):
+        """Test failure when adding a virtual IP."""
+        manager = NetworkVisibleManager(interface='eth0')
+        result = manager.add_virtual_ip_with_visibility('192.168.1.150', 'test1', '24')
+        self.assertFalse(result)
+        self.assertEqual(len(manager.virtual_ips), 0)
 
 if __name__ == '__main__':
     unittest.main()
