@@ -19,7 +19,7 @@ class NetworkVisibleManager:
 
     def __init__(self, interface: str = "eth0"):
         self.interface = interface
-        self.virtual_ips: List[Tuple[str, str]] = []  # (ip, label)
+        self.virtual_ips: List[Tuple[str, str, str]] = []  # (ip, label, cidr)
         self.arp_announced: List[str] = []
 
     # -----------------
@@ -132,7 +132,7 @@ class NetworkVisibleManager:
             self.update_arp_cache(ip_address)
 
             logger.info("Added and announced IP %s as %s", ip_address, label)
-            self.virtual_ips.append((ip_address, label))
+            self.virtual_ips.append((ip_address, label, cidr))
             return True
         except subprocess.CalledProcessError as e:
             logger.error("Failed to add IP %s: %s", ip_address, e)
@@ -194,7 +194,7 @@ class NetworkVisibleManager:
 
     def cleanup(self) -> None:
         logger.info("Cleaning up: removing %d virtual IP(s)", len(self.virtual_ips))
-        for ip, _label in self.virtual_ips:
-            self.remove_virtual_ip(ip)
+        for ip, _label, cidr in self.virtual_ips:
+            self.remove_virtual_ip(ip, cidr)
         # Prevent double-removal attempts on subsequent cleanup calls
         self.virtual_ips.clear()
