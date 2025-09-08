@@ -2,8 +2,8 @@
 
 ![PyPI](https://img.shields.io/pypi/v/arpx)
 ![Python Versions](https://img.shields.io/pypi/pyversions/arpx)
-![License](https://img.shields.io/github/license/dynapsys/dynahost)
-![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/dynahost/ci.yml?branch=main)
+![License](https://img.shields.io/github/license/dynapsys/arpx)
+![Build](https://img.shields.io/github/actions/workflow/status/dynapsys/arpx/ci.yml?branch=main)
 ![Coverage](https://img.shields.io/badge/Coverage-32%25-green)
 
 **Dynamic multi-IP LAN HTTP/HTTPS server manager with ARP visibility and optional Docker/Podman Compose bridging.**
@@ -146,8 +146,8 @@ Contributions are welcome! Here's how you can get involved:
 1. **Setup Development Environment:**
    ```bash
    # Clone the repository if you haven't already
-   git clone https://github.com/dynapsys/dynahost.git
-   cd dynahost
+   git clone https://github.com/dynapsys/arpx.git
+   cd arpx
 
    # Install development dependencies
    make dev
@@ -172,8 +172,10 @@ For major changes, please open an issue first to discuss what you would like to 
 
 ### Author
 
-- **Name:** Dynapsys Team
-- **Contact:** [GitHub Issues](https://github.com/dynapsys/dynahost/issues)
+- **Name:** Tom Sapletta
+- **Contact:** [info@softreck.dev](mailto:info@softreck.dev)
+
+`arpx` is created and maintained by Tom Sapletta, a software architect and open-source enthusiast with a passion for creating tools that simplify complex development workflows. His work focuses on networking, automation, and building elegant solutions for developers.
 
 ### License
 

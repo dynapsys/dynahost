@@ -161,6 +161,7 @@ def cmd_up(args: argparse.Namespace) -> int:
 
     # Create IPs and servers
     print(f"\n🚀 Configuring {len(created_ips)} virtual IP(s)...\n")
+    successful_ips: List[str] = []
     for i, ip in enumerate(created_ips):
         print(f"📦 Config {i + 1}/{len(created_ips)}:")
         if net_manager.add_virtual_ip_with_visibility(ip, i + 1, cidr):
@@ -169,18 +170,24 @@ def cmd_up(args: argparse.Namespace) -> int:
             content = f"Hello {i + 1}"
             server = web_manager.start_lan_server(ip, port, content, ssl_ctx)
             if server:
+                successful_ips.append(ip)
                 time.sleep(0.5)
                 web_manager.test_connectivity(ip, port, scheme)
                 if mdns_pub:
                     mdns_pub.publish(args.mdns_prefix + str(i + 1), ip, port, https=(scheme == "https"))
         print()
 
-    print_summary(created_ips, args.base_port, scheme)
+    if not successful_ips:
+        print("❌ No servers were started successfully.")
+        net_manager.cleanup()
+        return 1
+
+    print_summary(successful_ips, args.base_port, scheme)
 
     # Post-start ARP reannounce
     time.sleep(2)
     print("\n📢 Re-announcing IPs on the network...")
-    for ip in created_ips:
+    for ip in successful_ips:
         net_manager.announce_arp(ip)
 
     print("\n✅ Ready! Servers visible across the LAN.")
@@ -190,7 +197,7 @@ def cmd_up(args: argparse.Namespace) -> int:
     try:
         while True:
             time.sleep(30)
-            for ip in created_ips:
+            for ip in successful_ips:
                 net_manager.update_arp_cache(ip)
     finally:
         net_manager.cleanup()

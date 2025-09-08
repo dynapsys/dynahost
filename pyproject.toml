@@ -32,8 +32,8 @@ compose = ["PyYAML>=6.0"]
 test = ["pytest>=7.0", "pytest-timeout>=2.1"]
 
 [project.urls]
-Homepage = "https://github.com/dynapsys/dynahost"
-Issues = "https://github.com/dynapsys/dynahost/issues"
+Homepage = "https://github.com/dynapsys/arpx"
+Issues = "https://github.com/dynapsys/arpx/issues"
 
 [project.scripts]
 arpx = "arpx.cli:main"
